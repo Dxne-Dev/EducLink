@@ -39,3 +39,23 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# binary fonts (served from public/fonts/ instead)
+*.otf
+*.ttf
+*.woff
+*.woff2
+
+# internal design docs (not source code)
+DESIGN.md
+DESIGN2.md
+look-ui.md
+session.md
+
+# favicon source assets (actual favicons live in public/)
+favicon_io/
+
+# environment & secrets
+.env
+.env.*
+!.env.example
