@@ -27,11 +27,11 @@ export default async function DashboardLayout({
     .single()
 
   return (
-    <div className="flex min-h-screen bg-canvas-soft">
+    <div className="flex min-h-screen bg-canvas-soft" suppressHydrationWarning>
       <Sidebar role={profile?.role} />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col" suppressHydrationWarning>
         <Header fullName={profile?.full_name} />
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-6" suppressHydrationWarning>{children}</main>
       </div>
     </div>
   )

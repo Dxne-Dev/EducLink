@@ -31,12 +31,20 @@ export const STATUS_LABELS = {
   archived: 'Archivé',
 } as const
 
+export const VISIBILITY_LABELS = {
+  private: 'Privé',
+  public: 'Public',
+} as const
+
 export const TEMPLATE_CATEGORIES = [
-  { value: 'convention', label: 'Convention de stage' },
-  { value: 'evaluation', label: 'Grille d\'évaluation' },
-  { value: 'cv', label: 'Modèle CV' },
-  { value: 'lettre', label: 'Lettre de motivation' },
-  { value: 'autre', label: 'Autre' },
+  { value: 'gabarit', label: 'Gabarit officiel (Word / LaTeX)', icon: 'FileCode' },
+  { value: 'guide', label: 'Guide méthodologique & Insertion', icon: 'Compass' },
+  { value: 'exemple', label: 'Exemple de rapport type', icon: 'Award' },
+  { value: 'convention', label: 'Convention de stage', icon: 'FileCheck' },
+  { value: 'evaluation', label: 'Grille d\'évaluation', icon: 'ClipboardCheck' },
+  { value: 'cv', label: 'Modèle CV & Candidature', icon: 'UserCheck' },
+  { value: 'lettre', label: 'Lettre de motivation', icon: 'Mail' },
+  { value: 'autre', label: 'Autre document', icon: 'FileText' },
 ] as const
 
 export const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50 MB

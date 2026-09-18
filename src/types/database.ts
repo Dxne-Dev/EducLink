@@ -4,12 +4,16 @@ export type ResourceType = 'cours' | 'tp' | 'examen' | 'td' | 'fiche' | 'autre'
 
 export type DocumentStatus = 'draft' | 'submitted' | 'validated' | 'archived'
 
+export type ResourceVisibility = 'private' | 'public'
+
 export interface Profile {
   id: string
   full_name: string
   role: UserRole
   avatar_url: string | null
   promo_id: string | null
+  filiere_id: string | null
+  niveau_id: string | null
   created_at: string
   updated_at: string
 }
@@ -59,6 +63,7 @@ export interface Resource {
   promo_id: string
   uploaded_by: string
   status: DocumentStatus
+  visibility: ResourceVisibility
   file_path: string
   file_size: number | null
   mime_type: string | null
@@ -117,10 +122,38 @@ export interface Template {
   name: string
   description: string | null
   category: string
+  filiere_id: string | null
   file_path: string
   file_size: number | null
   mime_type: string | null
   uploaded_by: string
+  created_at: string
+}
+
+export interface ResourcePromoAccess {
+  id: string
+  resource_id: string
+  promo_id: string
+  visibility: ResourceVisibility
+  granted_by: string
+  granted_at: string
+}
+
+export interface TeacherRegistry {
+  id: string
+  full_name: string
+  email: string
+  employee_id: string | null
+  filiere_id: string | null
+  is_used: boolean
+  created_at: string
+}
+
+export interface TeacherMatiere {
+  id: string
+  teacher_id: string | null
+  teacher_registry_id: string | null
+  matiere_id: string
   created_at: string
 }
 

@@ -58,3 +58,51 @@ export async function getUsers() {
 
   return { data: data ?? [] }
 }
+
+export async function updateMyProfile(fullName: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Non authentifié' }
+  if (!fullName.trim()) return { error: 'Le nom ne peut pas être vide' }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ full_name: fullName.trim() })
+    .eq('id', user.id)
+
+  if (error) return { error: error.message || 'Erreur lors de la mise à jour du profil' }
+
+  revalidatePath('/dashboard/profile')
+  return { success: true }
+}
+
+export async function updateMyPassword(newPassword: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Non authentifié' }
+  if (newPassword.length < 6) {
+    return { error: 'Le mot de passe doit comporter au moins 6 caractères.' }
+  }
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword })
+  if (error) return { error: error.message }
+
+  return { success: true }
+}
+
+export async function updateMyAvatar(avatarUrl: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Non authentifié' }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ avatar_url: avatarUrl })
+    .eq('id', user.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/dashboard/profile')
+  return { success: true }
+}
+

@@ -10,11 +10,13 @@ export function Header({ fullName }: HeaderProps) {
   return (
     <header className="flex h-16 items-center justify-between border-b border-hairline bg-white px-6">
       <div className="lg:hidden">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-secondary text-white">
-            <GraduationCap className="h-4 w-4" />
-          </span>
-          <span className="text-title font-bold text-ink">Edulink</span>
+        <Link href="/dashboard" className="flex items-center gap-2.5">
+          <img
+            src="/android-chrome-192x192.png"
+            alt="Edulink logo"
+            className="h-7 w-7 rounded object-cover shadow-sm"
+          />
+          <span className="font-amatry text-xl tracking-wide text-ink">Edulink</span>
         </Link>
       </div>
       <div className="flex-1" />

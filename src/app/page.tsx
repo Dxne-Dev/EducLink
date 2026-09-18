@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { TESTIMONIALS } from '@/lib/testimonials'
@@ -13,6 +15,7 @@ import {
   Users,
 } from 'lucide-react'
 import { BentoGrid, BentoCard } from '@/components/ui/bento-grid'
+import { createClient } from '@/lib/supabase/client'
 
 /* ── Données ───────────────────────────────────────────── */
 
@@ -177,6 +180,20 @@ function DocProductMockup() {
 }
 
 export default function Home() {
+  const router = useRouter()
+
+  useEffect(() => {
+    const supabase = createClient()
+    // Si Supabase redirige vers la racine après un reset password
+    // (redirect_to=http://localhost:3000), on intercepte l'événement PASSWORD_RECOVERY
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        router.replace('/reset-password')
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [router])
+
   return (
     <div className="font-sans">
       {/* ═══ NAV ═══ */}

@@ -110,7 +110,7 @@ export default async function MatiereAdminPage() {
               <CardDescription>Matière rattachée à un niveau.</CardDescription>
             </CardHeader>
             <CardContent>
-              <MatiereForm niveaux={niveauxList} />
+              <MatiereForm filieres={filieresList} niveaux={niveauxList} />
             </CardContent>
           </Card>
         </div>

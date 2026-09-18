@@ -31,6 +31,7 @@ export async function createTemplate(formData: FormData) {
     name: formData.get('name'),
     description: formData.get('description') || undefined,
     category: formData.get('category'),
+    filiere_id: formData.get('filiere_id') || undefined,
   })
   if (!validated.success) return { error: validated.error.issues[0].message }
 
@@ -47,7 +48,10 @@ export async function createTemplate(formData: FormData) {
   if (uploadError) return { error: "Erreur lors de l'upload du modèle" }
 
   const { error } = await supabase.from('templates').insert({
-    ...validated.data,
+    name: validated.data.name,
+    description: validated.data.description,
+    category: validated.data.category,
+    filiere_id: validated.data.filiere_id || null,
     file_path: filePath,
     file_size: file.size,
     mime_type: file.type,
@@ -60,6 +64,8 @@ export async function createTemplate(formData: FormData) {
   }
 
   revalidatePath('/dashboard/templates')
+  revalidatePath('/dashboard/stages')
+  revalidatePath('/admin/rapports')
   return { success: true }
 }
 
@@ -83,5 +89,7 @@ export async function deleteTemplate(id: string) {
   if (error) return { error: 'Erreur lors de la suppression' }
 
   revalidatePath('/dashboard/templates')
+  revalidatePath('/dashboard/stages')
+  revalidatePath('/admin/rapports')
   return { success: true }
 }

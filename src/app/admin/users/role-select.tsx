@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { updateUserRole } from '@/lib/actions/user.actions'
 import { Select } from '@/components/ui/Select'
 import { ROLE_LABELS } from '@/lib/constants'
@@ -19,6 +19,10 @@ export function RoleSelect({
 }) {
   const [pending, startTransition] = useTransition()
   const [current, setCurrent] = useState(role)
+
+  useEffect(() => {
+    setCurrent(role)
+  }, [role])
 
   function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const next = e.target.value as UserRole

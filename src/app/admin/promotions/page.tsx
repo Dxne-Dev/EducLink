@@ -39,7 +39,11 @@ export default async function PromotionAdminPage() {
               {promotions.data && promotions.data.length > 0 ? (
                 <ul className="divide-y divide-hairline">
                   {promotions.data.map((p) => (
-                    <PromotionRow key={p.id} promotion={p} />
+                    <PromotionRow
+                      key={p.id}
+                      promotion={p}
+                      niveaux={niveaux.data ?? []}
+                    />
                   ))}
                 </ul>
               ) : (

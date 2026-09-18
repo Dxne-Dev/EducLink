@@ -9,7 +9,11 @@ import { Button } from '@/components/ui/Button'
 import { Alert } from '@/components/ui/Alert'
 import { TEMPLATE_CATEGORIES } from '@/lib/constants'
 
-export function TemplateForm() {
+export function TemplateForm({
+  filieres = [],
+}: {
+  filieres?: { id: string; name: string; code: string }[]
+}) {
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
 
@@ -37,12 +41,28 @@ export function TemplateForm() {
         </Select>
       </div>
       <div className="sm:col-span-2">
+        <Label htmlFor="filiere_id">Filière concernée</Label>
+        <Select id="filiere_id" name="filiere_id" className="mt-1" defaultValue="">
+          <option value="">Tous les étudiants (modèle général)</option>
+          {filieres.map((f) => (
+            <option key={f.id} value={f.id}>{f.name} ({f.code})</option>
+          ))}
+        </Select>
+      </div>
+      <div className="sm:col-span-2">
         <Label htmlFor="description">Description</Label>
         <Input id="description" name="description" placeholder="Description facultative" className="mt-1" />
       </div>
       <div className="sm:col-span-2">
-        <Label htmlFor="file">Fichier *</Label>
-        <Input id="file" name="file" type="file" required className="mt-1" accept=".pdf,.docx,.xlsx,.pptx" />
+        <Label htmlFor="file">Fichier (Word, LaTeX .zip, PDF, etc.) *</Label>
+        <Input
+          id="file"
+          name="file"
+          type="file"
+          required
+          className="mt-1"
+          accept=".pdf,.docx,.doc,.zip,.tex,.xlsx,.pptx"
+        />
       </div>
       <div className="sm:col-span-2">
         <Button type="submit" disabled={pending}>

@@ -59,7 +59,8 @@ export const internshipSchema = z.object({
 export const templateSchema = z.object({
   name: z.string().min(1, 'Le nom est requis'),
   description: z.string().optional(),
-  category: z.enum(['convention', 'evaluation', 'cv', 'lettre', 'autre']),
+  category: z.enum(['gabarit', 'guide', 'exemple', 'convention', 'evaluation', 'cv', 'lettre', 'autre']),
+  filiere_id: z.string().uuid('Filière invalide').optional().or(z.literal('')),
 })
 
 export const searchSchema = z.object({

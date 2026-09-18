@@ -19,15 +19,24 @@ const CATEGORY_STICKER: Record<string, string> = {
 
 export default async function TemplatesPage() {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  const [templates, profile] = await Promise.all([
-    supabase.from('templates').select('*, profiles(full_name)').order('created_at', { ascending: false }),
-    supabase.from('profiles').select('role'),
+  const [templates, profile, filieres] = await Promise.all([
+    supabase.from('templates').select('*, profiles(full_name), filieres(name, code)').order('created_at', { ascending: false }),
+    supabase.from('profiles').select('role, filiere_id').eq('id', user?.id ?? '').single(),
+    supabase.from('filieres').select('id, name, code').order('name'),
   ])
 
-  const data = templates.data ?? []
-  const role = profile.data?.[0]?.role
-  const canUpload = role === 'admin' || role === 'teacher'
+  const userRole = profile.data?.role
+  const userFiliereId = profile.data?.filiere_id
+  const canUpload = userRole === 'admin' || userRole === 'teacher'
+  const filieresList = filieres.data ?? []
+
+  // Pour un étudiant : afficher les modèles généraux (sans filière) OU ceux de sa filière
+  const rawData = templates.data ?? []
+  const data = userRole === 'student' && userFiliereId
+    ? rawData.filter((t) => !t.filiere_id || t.filiere_id === userFiliereId)
+    : rawData
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -45,7 +54,7 @@ export default async function TemplatesPage() {
             <CardDescription>Téléversez un nouveau document type.</CardDescription>
           </CardHeader>
           <CardContent>
-            <TemplateForm />
+            <TemplateForm filieres={filieresList} />
           </CardContent>
         </Card>
       )}
@@ -77,7 +86,18 @@ export default async function TemplatesPage() {
                           <div className={cn('rounded-md p-2', CATEGORY_STICKER[t.category] ?? 'bg-canvas-soft text-ink-muted')}>
                             <FileText className="h-5 w-5" />
                           </div>
-                          {canUpload && <TemplateDeleteButton id={t.id} />}
+                          <div className="flex items-center gap-2">
+                            {t.filieres ? (
+                              <span className="rounded-full bg-accent-purple/20 px-2 py-0.5 text-caption font-medium text-accent-purple-deep">
+                                {t.filieres.code || t.filieres.name}
+                              </span>
+                            ) : (
+                              <span className="rounded-full bg-canvas-soft px-2 py-0.5 text-caption text-ink-muted">
+                                Général
+                              </span>
+                            )}
+                            {canUpload && <TemplateDeleteButton id={t.id} />}
+                          </div>
                         </div>
                         <h3 className="mt-3 text-title font-semibold text-ink">{t.name}</h3>
                         {t.description && (

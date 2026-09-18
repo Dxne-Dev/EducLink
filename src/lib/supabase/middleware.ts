@@ -29,22 +29,48 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
+  const path = request.nextUrl.pathname
+  const isProtectedPath =
+    path.startsWith('/dashboard') ||
+    path.startsWith('/prof') ||
+    path.startsWith('/etudiant') ||
+    path.startsWith('/admin')
+
+  // Redirection si non authentifié sur une page protégée
+  if (!user && isProtectedPath) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  if (user && request.nextUrl.pathname.startsWith('/admin')) {
+  // Contrôles d'accès par rôle
+  if (user && isProtectedPath) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
 
-    if (profile?.role !== 'admin') {
+    const role = profile?.role || 'student'
+
+    // Accès /admin
+    if (path.startsWith('/admin') && role !== 'admin') {
       const url = request.nextUrl.clone()
-      url.pathname = '/dashboard'
+      url.pathname = role === 'teacher' ? '/prof/dashboard' : '/etudiant/dashboard'
+      return NextResponse.redirect(url)
+    }
+
+    // Accès /prof
+    if (path.startsWith('/prof') && role !== 'teacher' && role !== 'admin') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/etudiant/dashboard'
+      return NextResponse.redirect(url)
+    }
+
+    // Accès /etudiant
+    if (path.startsWith('/etudiant') && role !== 'student' && role !== 'admin') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/prof/dashboard'
       return NextResponse.redirect(url)
     }
   }
