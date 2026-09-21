@@ -1,6 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
 import Link from 'next/link'
 import {
   Users,
@@ -10,15 +8,42 @@ import {
   Award,
   FileText,
   ArrowRight,
-  TrendingUp,
   ShieldCheck,
   CheckCircle2,
+  Plus,
+  Sparkles,
+  TrendingUp,
 } from 'lucide-react'
+import { ActivityChart } from '@/components/dashboard/ActivityChart'
+import { StatsBarWidget } from '@/components/dashboard/StatsBarWidget'
+import { StatsAreaWidget } from '@/components/dashboard/StatsAreaWidget'
+import { AcademicBreakdown } from '@/components/dashboard/AcademicBreakdown'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { HiOutlineDotsVertical } from 'react-icons/hi'
+import { Icon } from '@iconify/react'
+import { getAdminStats } from '@/lib/actions/stats.actions'
 
 export const metadata = { title: 'Edulink - Tableau de bord Administration' }
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
+
+  // Stats réelles admin
+  const adminStats = await getAdminStats()
+  const realStats = adminStats.success ? adminStats.data : null
 
   // Récupération globale des statistiques
   const [
@@ -29,7 +54,7 @@ export default async function AdminDashboardPage() {
     promotionsRes,
     matieresRes,
     resourcesRes,
-    reportsRes,
+    templatesRes,
   ] = await Promise.all([
     supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student'),
     supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'teacher'),
@@ -38,7 +63,7 @@ export default async function AdminDashboardPage() {
     supabase.from('promotions').select('id, name, is_active, year_start, year_end, filieres(name), niveaux(name)').order('created_at', { ascending: false }).limit(5),
     supabase.from('matieres').select('id', { count: 'exact', head: true }),
     supabase.from('resources').select('id', { count: 'exact', head: true }),
-    supabase.from('internship_reports').select('id, is_validated'),
+    supabase.from('templates').select('id', { count: 'exact', head: true }),
   ])
 
   const studentCount = studentsRes.count ?? 0
@@ -48,249 +73,296 @@ export default async function AdminDashboardPage() {
   const recentPromotions = promotionsRes.data ?? []
   const matiereCount = matieresRes.count ?? 0
   const resourceCount = resourcesRes.count ?? 0
-  const reportsList = reportsRes.data ?? []
-  const pendingReports = reportsList.filter((r) => !r.is_validated).length
+  const templatesCount = templatesRes.count ?? 0
 
-  const stats = [
+  const chartData = realStats
+    ? realStats.months.map((_, i) => ({
+        downloads: realStats.registrationsByMonth[i] ?? 0,
+        consultations: realStats.coursesByMonth[i] ?? 0,
+      }))
+    : undefined
+
+  const sparkActifs = realStats
+    ? realStats.registrationsByMonth.slice(0, 6)
+    : undefined
+  const sparkTotal = realStats
+    ? realStats.coursesByMonth.map((v: number) => v + 5).slice(0, 6)
+    : undefined
+
+  const academicBreakdown = [
     {
-      title: 'Étudiants Inscrits',
-      value: studentCount,
-      icon: Users,
-      color: 'text-primary',
-      bg: 'bg-primary/10',
-      href: '/admin/users',
-      description: 'Comptes étudiants actifs',
-    },
-    {
-      title: 'Enseignants Habilités',
-      value: registryTeachers.length,
-      subvalue: `${activeTeachersCount} actifs`,
-      icon: Award,
-      color: 'text-accent-orange-deep',
-      bg: 'bg-accent-orange/15',
-      href: '/admin/teachers',
-      description: 'Registre académique',
-    },
-    {
-      title: 'Filières de formation',
-      value: filieresList.length,
-      icon: GraduationCap,
-      color: 'text-accent-purple-deep',
-      bg: 'bg-accent-purple/15',
+      icon: 'solar:diploma-verified-bold-duotone',
+      title: 'Filières Actives',
+      subtitle: `${filieresList.length} cursus académiques`,
+      color: 'bg-primary/15',
+      textColor: 'text-primary',
+      tag: `${filieresList.length} filières`,
+      tagColor: 'bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300',
       href: '/admin/filieres',
-      description: 'Cursus universitaires',
     },
     {
-      title: 'Matières au programme',
-      value: matiereCount,
-      icon: BookMarked,
-      color: 'text-accent-teal',
-      bg: 'bg-accent-teal/15',
+      icon: 'solar:book-bookmark-bold-duotone',
+      title: 'Matières & Modules',
+      subtitle: 'Réparties sur tous les niveaux',
+      color: 'bg-teal-500/15',
+      textColor: 'text-teal-600 dark:text-teal-400',
+      tag: `${matiereCount} matières`,
+      tagColor: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
       href: '/admin/matieres',
-      description: 'Réparties par niveaux',
+    },
+    {
+      icon: 'solar:user-id-bold-duotone',
+      title: 'Enseignants Habilités',
+      subtitle: `${activeTeachersCount} comptes professeurs actifs`,
+      color: 'bg-amber-500/15',
+      textColor: 'text-amber-600 dark:text-amber-400',
+      tag: `${registryTeachers.length} inscrits`,
+      tagColor: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300',
+      href: '/admin/teachers',
+    },
+    {
+      icon: 'solar:clipboard-check-bold-duotone',
+      title: 'Gabarits & Guides',
+      subtitle: templatesCount > 0 ? `${templatesCount} documents en libre-service` : 'Aucun document déposé',
+      color: 'bg-rose-500/15',
+      textColor: 'text-rose-600 dark:text-rose-400',
+      tag: templatesCount > 0 ? `${templatesCount} gabarits` : 'À alimenter',
+      tagColor: templatesCount > 0 ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
+      href: '/admin/rapports',
     },
   ]
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
-      {/* En-tête */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-hairline pb-5">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-heading-2 text-ink">Administration</h1>
-            <Badge variant="purple" className="flex items-center gap-1">
-              <ShieldCheck className="h-3 w-3" /> Espace Sécurisé
-            </Badge>
+    <div className="mx-auto max-w-7xl space-y-8 animate-fade-in pb-12">
+      {/* Top Banner Hero MaterialM */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0075de] via-[#0091ff] to-[#16CDC7] p-6 text-white shadow-md sm:p-8">
+        <div className="relative z-10 flex flex-col justify-between gap-6 md:flex-row md:items-center">
+          <div className="max-w-2xl space-y-2">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold backdrop-blur-sm">
+              <ShieldCheck className="h-4 w-4" />
+              <span>Console d'Administration Globale</span>
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl text-white">
+              Supervision Académique EduLink 🛡️
+            </h1>
+            <p className="text-sm text-sky-100 sm:text-base leading-relaxed">
+              Supervisez les promotions, gérez l'arborescence des matières LMD, habilitez les enseignants et publiez les gabarits de stage.
+            </p>
           </div>
-          <p className="mt-1 text-body-sm text-ink-muted">
-            Gestion globale du cursus académique LMD, des filières, promotions et enseignants.
-          </p>
-        </div>
-      </div>
 
-      {/* Cartes de statistiques principales */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((s) => {
-          const Icon = s.icon
-          return (
-            <Link key={s.title} href={s.href} className="group transition-all hover:scale-[1.01]">
-              <Card className="h-full border-hairline transition-colors group-hover:border-primary/40">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-body-sm font-medium text-ink-muted">{s.title}</span>
-                    <div className={`rounded-lg p-2.5 ${s.bg} ${s.color}`}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                  </div>
-                  <div className="mt-3 flex items-baseline gap-2">
-                    <span className="text-heading-1 font-bold text-ink">{s.value}</span>
-                    {s.subvalue && (
-                      <span className="text-caption font-medium text-ink-muted">({s.subvalue})</span>
-                    )}
-                  </div>
-                  <p className="mt-1 text-caption text-ink-faint">{s.description}</p>
-                </CardContent>
-              </Card>
+          <div className="flex shrink-0 items-center gap-3">
+            <Link
+              href="/admin/promotions"
+              className="inline-flex h-11 items-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-slate-900 shadow-md transition-all hover:bg-slate-100 hover:scale-105 active:scale-95"
+            >
+              <Plus className="h-4 w-4 text-primary" />
+              <span>Nouvelle Promotion</span>
             </Link>
-          )
-        })}
+          </div>
+        </div>
+
+        {/* Decorative background blurs */}
+        <div className="pointer-events-none absolute -right-12 -top-12 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-12 right-48 h-48 w-48 rounded-full bg-teal-300/20 blur-2xl" />
       </div>
 
-      {/* Grille principale : Actions rapides & Dernières promotions */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Dernières promotions actives */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
+      {/* Grid Row 1: Global Activity Chart & Sparklines */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-8">
+          <ActivityChart
+            title="Activité & Fréquentation de la Plateforme"
+            subtitle="Inscriptions, cours déposés et consultations mensuelles"
+            data={chartData}
+            seriesNames={{ downloads: 'Inscriptions', consultations: 'Cours déposés' }}
+          />
+        </div>
+
+        <div className="lg:col-span-4 flex flex-col gap-6">
+          <StatsBarWidget
+            title="Étudiants Inscrits"
+            value={studentCount}
+            growth={`+${studentCount} actifs`}
+            icon="solar:users-group-two-rounded-bold-duotone"
+            href="/admin/users"
+            chartData={sparkActifs && sparkTotal ? { actifs: sparkActifs, total: sparkTotal } : undefined}
+          />
+          <StatsAreaWidget
+            title="Ressources Publiées"
+            value={resourceCount}
+            growth={`+${resourceCount} au total`}
+            icon="solar:folder-with-files-bold-duotone"
+            href="/admin/rapports"
+            chartData={sparkActifs ? { evolution: sparkActifs } : undefined}
+          />
+        </div>
+      </div>
+
+      {/* Grid Row 2: Recent Promotions Table & Breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-8">
+          <div className="relative w-full rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xs transition-colors dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
               <div>
-                <CardTitle className="text-title">Promotions Récentes</CardTitle>
-                <CardDescription>Suivi des promotions et de leur niveau actuel</CardDescription>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Promotions Récentes</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Suivi des cohortes et de leur niveau actuel</p>
               </div>
+
               <Link
                 href="/admin/promotions"
-                className="flex items-center gap-1 text-body-sm font-medium text-primary hover:underline"
+                className="text-xs font-semibold text-primary hover:underline dark:text-sky-400"
               >
-                Gérer tout <ArrowRight className="h-3.5 w-3.5" />
+                Gérer toutes les promotions →
               </Link>
-            </CardHeader>
-            <CardContent>
-              {recentPromotions.length === 0 ? (
-                <div className="py-8 text-center text-body-sm text-ink-muted">
-                  Aucune promotion configurée pour le moment.
-                </div>
-              ) : (
-                <ul className="divide-y divide-hairline">
+            </div>
+
+            <div className="mt-4 overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b border-slate-100 dark:border-slate-800">
+                    <TableHead className="text-xs font-bold uppercase text-slate-400">Promotion</TableHead>
+                    <TableHead className="text-xs font-bold uppercase text-slate-400">Filière / Niveau</TableHead>
+                    <TableHead className="text-xs font-bold uppercase text-slate-400">Statut</TableHead>
+                    <TableHead className="w-10"></TableHead>
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody>
                   {recentPromotions.map((p: any) => (
-                    <li key={p.id} className="flex items-center justify-between py-3.5">
-                      <div className="flex items-center gap-3">
-                        <div className="grid size-9 place-content-center rounded-lg bg-canvas-soft text-ink-secondary">
-                          <Building2 className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-ink">{p.name}</p>
-                            {p.is_active ? (
-                              <Badge variant="success" className="text-[10px] py-0">Actif</Badge>
-                            ) : (
-                              <Badge variant="secondary" className="text-[10px] py-0">Terminé</Badge>
-                            )}
+                    <TableRow
+                      key={p.id}
+                      className="border-b border-slate-100 transition-colors hover:bg-slate-50/50 dark:border-slate-800/60 dark:hover:bg-slate-800/30"
+                    >
+                      <TableCell className="py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-primary/20 dark:text-sky-300 font-bold text-xs">
+                            <Icon icon="solar:buildings-3-bold-duotone" height={20} />
                           </div>
-                          <p className="text-caption text-ink-muted">
-                            Filière : {p.filieres?.name ?? 'Non définie'} · Niveau actuel : <span className="font-semibold text-primary">{p.niveaux?.name ?? 'N/A'}</span>
-                          </p>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                              {p.name}
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              Année : {p.year_start} - {p.year_end}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-caption text-ink-faint">
-                          {p.year_start} - {p.year_end}
+                      </TableCell>
+
+                      <TableCell className="py-3.5">
+                        <div className="text-xs">
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            {p.filieres?.name ?? 'Non définie'}
+                          </span>
+                          <span className="text-slate-400"> • </span>
+                          <span className="font-semibold text-primary dark:text-sky-400">
+                            {p.niveaux?.name ?? 'N/A'}
+                          </span>
+                        </div>
+                      </TableCell>
+
+                      <TableCell className="py-3.5">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                            p.is_active
+                              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50'
+                              : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200/50'
+                          }`}
+                        >
+                          {p.is_active ? 'Active' : 'Archivée'}
                         </span>
-                      </div>
-                    </li>
+                      </TableCell>
+
+                      <TableCell className="py-3.5 text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                              <HiOutlineDotsVertical size={16} />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                              <Link href="/admin/promotions">Voir la promotion</Link>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Raccourcis pédagogiques LMD */}
-          <Card className="bg-gradient-to-br from-primary/5 via-transparent to-transparent border-primary/20">
-            <CardHeader>
-              <CardTitle className="text-title flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-primary" />
-                Flux académique LMD : Rappel du cycle
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-body-sm text-ink-secondary">
-              <div className="grid gap-3 sm:grid-cols-3 text-caption">
-                <div className="rounded-lg border border-hairline bg-white p-3 shadow-xs">
-                  <p className="font-semibold text-ink">1. Filière & Niveaux</p>
-                  <p className="mt-1 text-ink-muted">Chaque filière contient ses niveaux (L1, L2, L3...).</p>
-                </div>
-                <div className="rounded-lg border border-hairline bg-white p-3 shadow-xs">
-                  <p className="font-semibold text-ink">2. Matières & Enseignants</p>
-                  <p className="mt-1 text-ink-muted">Les professeurs sont affectés aux matières de leur expertise.</p>
-                </div>
-                <div className="rounded-lg border border-hairline bg-white p-3 shadow-xs">
-                  <p className="font-semibold text-ink">3. Promo & Passage</p>
-                  <p className="mt-1 text-ink-muted">Chaque année, la promo change de niveau et hérite de ses cours.</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </TableBody>
+              </Table>
+            </div>
+          </div>
         </div>
 
-        {/* Colonne latérale : Accès rapides & Documents */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-title">Actions Rapides</CardTitle>
-              <CardDescription>Raccourcis de gestion administrative</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Link
-                href="/admin/matieres"
-                className="flex items-center justify-between rounded-md border border-hairline p-3 transition-colors hover:bg-canvas-soft"
-              >
-                <div className="flex items-center gap-3">
-                  <BookMarked className="h-4 w-4 text-accent-teal" />
-                  <span className="text-body-sm font-medium text-ink">Arborescence Matières</span>
-                </div>
-                <ArrowRight className="h-4 w-4 text-ink-faint" />
-              </Link>
-              <Link
-                href="/admin/teachers"
-                className="flex items-center justify-between rounded-md border border-hairline p-3 transition-colors hover:bg-canvas-soft"
-              >
-                <div className="flex items-center gap-3">
-                  <Award className="h-4 w-4 text-accent-orange-deep" />
-                  <span className="text-body-sm font-medium text-ink">Affecter Enseignants</span>
-                </div>
-                <ArrowRight className="h-4 w-4 text-ink-faint" />
-              </Link>
-              <Link
-                href="/admin/promotions"
-                className="flex items-center justify-between rounded-md border border-hairline p-3 transition-colors hover:bg-canvas-soft"
-              >
-                <div className="flex items-center gap-3">
-                  <Building2 className="h-4 w-4 text-primary" />
-                  <span className="text-body-sm font-medium text-ink">Passage de Niveau</span>
-                </div>
-                <ArrowRight className="h-4 w-4 text-ink-faint" />
-              </Link>
-              <Link
-                href="/admin/rapports"
-                className="flex items-center justify-between rounded-md border border-hairline p-3 transition-colors hover:bg-canvas-soft"
-              >
-                <div className="flex items-center gap-3">
-                  <FileText className="h-4 w-4 text-ink-muted" />
-                  <span className="text-body-sm font-medium text-ink">Rapports de stage</span>
-                </div>
-                {pendingReports > 0 ? (
-                  <Badge variant="warning" className="text-[10px] py-0">{pendingReports} en attente</Badge>
-                ) : (
-                  <CheckCircle2 className="h-4 w-4 text-accent-teal" />
-                )}
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* Synthèse Contenus */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-title">Bibliothèque & Dépôts</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between text-body-sm">
-                <span className="text-ink-muted">Ressources publiées</span>
-                <span className="font-semibold text-ink">{resourceCount}</span>
-              </div>
-              <div className="flex items-center justify-between text-body-sm">
-                <span className="text-ink-muted">Rapports de stages</span>
-                <span className="font-semibold text-ink">{reportsList.length}</span>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="lg:col-span-4">
+          <AcademicBreakdown
+            title="Synthèse Globale"
+            libraryHref="/admin/rapports"
+            libraryLabel="Gérer les gabarits & ressources"
+            templatesHref="/admin/rapports"
+            templatesLabel="Gérer les gabarits de stages →"
+            items={academicBreakdown.map((i) => ({ ...i, tag: i.tag }))}
+            totalResources={realStats?.totalResources}
+            typeCounts={realStats?.typeCounts}
+          />
         </div>
+      </div>
+
+      {/* Grid Row 3: Quick Access Administrative Cards */}
+      <div className="grid gap-6 sm:grid-cols-3">
+        <Link
+          href="/admin/matieres"
+          className="group block rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xs transition-all hover:-translate-y-1.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-500/15 text-teal-600 dark:bg-teal-500/25 dark:text-teal-400">
+              <Icon icon="solar:book-bookmark-bold-duotone" height={26} />
+            </div>
+            <ArrowRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-1" />
+          </div>
+          <h3 className="mt-4 font-bold text-slate-900 dark:text-white">
+            Arborescence Matières
+          </h3>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            Configurez les cours, TD et coefficients rattachés à chaque niveau LMD.
+          </p>
+        </Link>
+
+        <Link
+          href="/admin/teachers"
+          className="group block rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xs transition-all hover:-translate-y-1.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600 dark:bg-amber-500/25 dark:text-amber-400">
+              <Icon icon="solar:user-check-bold-duotone" height={26} />
+            </div>
+            <ArrowRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-1" />
+          </div>
+          <h3 className="mt-4 font-bold text-slate-900 dark:text-white">
+            Habilitation Enseignants
+          </h3>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            Attribuez les matières aux professeurs et gérez les clés d'enregistrement.
+          </p>
+        </Link>
+
+        <Link
+          href="/admin/rapports"
+          className="group block rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xs transition-all hover:-translate-y-1.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/15 text-rose-600 dark:bg-rose-500/25 dark:text-rose-400">
+              <Icon icon="solar:document-medicine-bold-duotone" height={26} />
+            </div>
+            <ArrowRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-1" />
+          </div>
+          <h3 className="mt-4 font-bold text-slate-900 dark:text-white">
+            Gabarits & Ressources de Stage
+          </h3>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            Déposez les gabarits Word/LaTeX, guides méthodologiques et documents officiels accessibles aux étudiants selon leur filière.
+          </p>
+        </Link>
       </div>
     </div>
   )

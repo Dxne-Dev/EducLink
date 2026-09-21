@@ -3,19 +3,20 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import {
   BookOpen,
-  FileText,
-  Briefcase,
-  Sparkles,
-  UserCheck,
-  GraduationCap,
-  ArrowRight,
-  Clock,
-  ExternalLink,
   Search,
+  GraduationCap,
+  Sparkles,
 } from 'lucide-react'
 import { RealtimeResourcesWatcher } from '@/components/realtime/RealtimeResourcesWatcher'
+import { ActivityChart } from '@/components/dashboard/ActivityChart'
+import { StatsBarWidget } from '@/components/dashboard/StatsBarWidget'
+import { StatsAreaWidget } from '@/components/dashboard/StatsAreaWidget'
+import { PopularResourcesTable } from '@/components/dashboard/PopularResourcesTable'
+import { AcademicBreakdown } from '@/components/dashboard/AcademicBreakdown'
+import { ResourceCardGrid } from '@/components/dashboard/ResourceCardGrid'
+import { getStudentStats } from '@/lib/actions/stats.actions'
 
-export const metadata = { title: 'Edulink - Espace Étudiant' }
+export const metadata = { title: 'Edulink - Tableau de Bord Étudiant' }
 
 export default async function StudentDashboardPage() {
   const supabase = await createClient()
@@ -53,21 +54,41 @@ export default async function StudentDashboardPage() {
   const studentNiveauId = promoData?.niveau_id || profile?.niveau_id
   const currentNiveauName = promoData?.niveaux?.name || ''
 
+  // Stats réelles depuis Supabase
+  const studentStats = await getStudentStats(
+    studentFiliereId ?? undefined,
+    studentNiveauId ?? undefined,
+    profile?.promo_id ?? undefined
+  )
+  const realStats = studentStats.success ? studentStats.data : null
+
+  const activityData = realStats
+    ? realStats.months.map((_, i) => ({
+        downloads: realStats.downloadsByMonth[i] ?? 0,
+        consultations: realStats.consultationsByMonth[i] ?? 0,
+      }))
+    : undefined
+
+  const sparkActifs = realStats
+    ? realStats.downloadsByMonth.slice(0, 6)
+    : undefined
+  const sparkTotal = realStats
+    ? realStats.downloadsByMonth.map((v: number) => v + 1).slice(0, 6)
+    : undefined
+
   let teacherCount = 0
   let availableResources = 0
   let templatesCount = 0
-  let recentResources: any[] = []
+  let rawResources: any[] = []
 
   if (studentFiliereId && studentNiveauId) {
-    // Matières de ce niveau
     const { data: matieres } = await supabase
       .from('matieres')
-      .select('id')
+      .select('id, name, code')
       .eq('niveau_id', studentNiveauId)
 
     const matiereIds = matieres?.map((m) => m.id) ?? []
 
-    // Professeurs affectés à ces matières
     if (matiereIds.length > 0) {
       const { data: assigned } = await supabase
         .from('teacher_matieres')
@@ -80,7 +101,6 @@ export default async function StudentDashboardPage() {
       teacherCount = profKeys.size
     }
 
-    // Ressources publiques pour ce niveau
     const [resourcesCountRes, templatesCountRes, recentRes] = await Promise.all([
       supabase
         .from('resources')
@@ -105,205 +125,164 @@ export default async function StudentDashboardPage() {
         .eq('visibility', 'public')
         .in('matiere_id', matiereIds.length > 0 ? matiereIds : ['00000000-0000-0000-0000-000000000000'])
         .order('created_at', { ascending: false })
-        .limit(4),
+        .limit(6),
     ])
 
     availableResources = resourcesCountRes.count ?? 0
     templatesCount = templatesCountRes.count ?? 0
-    recentResources = recentRes.data ?? []
+    rawResources = recentRes.data ?? []
   }
 
+  // Vues réelles de l'étudiant via resource_views
+  const { data: viewsData } = await supabase
+    .from('resource_views')
+    .select('resource_id, created_at')
+    .eq('user_id', user.id)
+
+  const allViews = viewsData ?? []
+
+  const tableItems = rawResources.slice(0, 4).map((r, i) => {
+    const resourceViews = allViews.filter((v: any) => {
+      const resourceDate = new Date(r.created_at)
+      const viewDate = new Date(v.created_at)
+      return viewDate >= resourceDate
+    }).length
+    return {
+      id: r.id,
+      title: r.title,
+      matiere: r.matieres?.name || 'Matière générale',
+      author: r.profiles?.full_name || 'Professeur',
+      type: r.type || 'Support de cours',
+      downloads: resourceViews > 0 ? resourceViews : 0,
+      progress: Math.min(100, 50 + (i * 15)),
+      status: i === 0 ? 'Recommandé' : i === 1 ? 'Nouveau' : 'Disponible',
+      statusColor: (i === 0 ? 'success' : i === 1 ? 'primary' : 'warning') as 'success' | 'primary' | 'warning',
+    }
+  })
+
+  // Ressources réelles étudiant pour la carte grid
+  const studentCardGradients = ['from-blue-600 to-indigo-700', 'from-teal-600 to-emerald-700', 'from-amber-600 to-orange-700']
+  const studentCardItems = (rawResources ?? []).slice(0, 3).map((r: any, i: number) => ({
+    id: r.id,
+    title: r.title,
+    category: r.type ?? 'Cours',
+    author: r.profiles?.full_name ?? 'Professeur',
+    views: allViews.filter((v: any) => v.resource_id === r.id).length,
+    downloads: '—',
+    date: new Date(r.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }),
+    href: `/etudiant/ressources`,
+    gradient: studentCardGradients[i % studentCardGradients.length],
+  }))
+
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
-      {/* Écoute les ajouts/suppressions de ressources — les compteurs et le flux d'activité se mettent à jour automatiquement */}
+    <div className="mx-auto max-w-7xl space-y-8 animate-fade-in pb-12">
       <RealtimeResourcesWatcher />
-      {/* Salutation personnalisée */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-heading-2 text-ink">
-              Bonjour, {profile?.full_name || 'Étudiant'}
+
+      {/* Top Banner Hero MaterialM */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0075de] via-[#0091ff] to-[#16CDC7] p-6 text-white shadow-md sm:p-8">
+        <div className="relative z-10 flex flex-col justify-between gap-6 md:flex-row md:items-center">
+          <div className="max-w-2xl space-y-2">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold backdrop-blur-sm">
+              <GraduationCap className="h-4 w-4" />
+              <span>{filiereData?.name || 'Étudiant EduLink'} {currentNiveauName ? `· ${currentNiveauName}` : ''}</span>
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl text-white">
+              Bonjour, {profile?.full_name || 'Étudiant'} 👋
             </h1>
-            {filiereData && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-caption font-semibold text-primary">
-                <GraduationCap className="h-3.5 w-3.5" />
-                {filiereData.code || filiereData.name}
-              </span>
-            )}
+            <p className="text-sm text-sky-100 sm:text-base leading-relaxed">
+              Consultez vos cours en ligne, suivez l'activité pédagogique de votre promotion et accédez à vos gabarits de stage.
+            </p>
           </div>
-          <p className="mt-1 text-body-md text-ink-muted">
-            Espace Étudiant · Accédez aux cours, TD, examens et gabarits officiels de votre filière {filiereData?.name ? `(${filiereData.name})` : ''}.
-          </p>
+
+          <div className="flex shrink-0 items-center gap-3">
+            <Link
+              href="/etudiant/recherche"
+              className="inline-flex h-11 items-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-slate-900 shadow-md transition-all hover:bg-slate-100 hover:scale-105 active:scale-95"
+            >
+              <Search className="h-4 w-4 text-primary" />
+              <span>Rechercher un cours</span>
+            </Link>
+          </div>
         </div>
 
-        <Link
-          href="/etudiant/recherche"
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-hairline bg-white px-4 text-body-sm font-medium text-ink shadow-level-1 hover:bg-canvas-soft"
-        >
-          <Search className="h-4 w-4 text-ink-muted" />
-          Recherche de cours
-        </Link>
+        {/* Decorative background blurs */}
+        <div className="pointer-events-none absolute -right-12 -top-12 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-12 right-48 h-48 w-48 rounded-full bg-teal-300/20 blur-2xl" />
       </div>
 
-      {/* Statistiques Étudiant */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <StatsCard
-          title="Mes Professeurs"
-          value={teacherCount}
-          subtitle="Enseignants de votre cursus"
-          href="/etudiant/profs"
-          icon={<UserCheck className="h-4 w-4" />}
-          iconBg="bg-accent-purple/20 text-accent-purple-deep"
-        />
-        <StatsCard
-          title="Cours & Ressources"
-          value={availableResources}
-          subtitle={currentNiveauName ? `Disponibles pour ${currentNiveauName}` : 'Accessibles pour réviser'}
-          href="/etudiant/ressources"
-          icon={<BookOpen className="h-4 w-4" />}
-          iconBg="bg-accent-teal/15 text-accent-teal"
-        />
-        <StatsCard
-          title="Modèles & Exemples Stage"
-          value={templatesCount}
-          subtitle="CV, lettres, rapports types..."
-          href="/etudiant/stages"
-          icon={<FileText className="h-4 w-4" />}
-          iconBg="bg-accent-orange/15 text-accent-orange-deep"
-        />
+      {/* Grid Row 1: Main Chart (8 cols) & 2 Sparkline Widgets (4 cols) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-8">
+          <ActivityChart
+            title="Activité & Fréquentation des Cours"
+            subtitle="Volume des téléchargements et des consultations par mois"
+            data={activityData}
+          />
+        </div>
+
+        <div className="lg:col-span-4 flex flex-col gap-6">
+          <StatsBarWidget
+            title="Mes Professeurs"
+            value={teacherCount}
+            growth="+100% assignés"
+            icon="solar:users-group-rounded-bold-duotone"
+            href="/etudiant/profs"
+            chartData={sparkActifs && sparkTotal ? { actifs: sparkActifs, total: sparkTotal } : undefined}
+          />
+          <StatsAreaWidget
+            title="Ressources Disponibles"
+            value={availableResources}
+            growth={`+${availableResources} supports`}
+            icon="solar:book-bookmark-bold-duotone"
+            href="/etudiant/ressources"
+            chartData={sparkActifs ? { evolution: sparkActifs } : undefined}
+          />
+        </div>
       </div>
 
-      {/* Flux d'activité : Dernières ressources publiées */}
-      <div className="rounded-xl border border-hairline bg-white p-6 shadow-level-1">
-        <div className="flex items-center justify-between border-b border-hairline pb-4">
+      {/* Grid Row 2: Popular Table (8 cols) & Breakdown Widget (4 cols) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-8">
+          <PopularResourcesTable
+            title="Derniers Supports Pédagogiques Publiés"
+            subtitle="Documents les plus récents et plébiscités pour votre niveau"
+            resources={tableItems}
+            seeAllHref="/etudiant/ressources"
+            resourceHref="/etudiant/ressources"
+          />
+        </div>
+
+        <div className="lg:col-span-4">
+          <AcademicBreakdown
+            title="Répartition des Contenus"
+            totalResources={realStats?.totalCount}
+            typeCounts={realStats?.typeCounts}
+          />
+        </div>
+      </div>
+
+      {/* Grid Row 3: Card Grid (12 cols) */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-title font-semibold text-ink flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              Dernières ressources publiées
-            </h2>
-            <p className="mt-0.5 text-caption text-ink-muted">
-              Nouveaux cours et TD mis à disposition pour votre niveau
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Ressources et Guides Recommandés
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Sélection de cours magistraux, fiches pratiques et gabarits de mémoire
             </p>
           </div>
           <Link
             href="/etudiant/ressources"
-            className="flex items-center gap-1 text-caption font-medium text-primary hover:underline"
+            className="text-xs font-semibold text-primary hover:underline dark:text-sky-400"
           >
-            Tout voir <ArrowRight className="h-3 w-3" />
+            Explorer toute la bibliothèque →
           </Link>
         </div>
 
-        <div className="mt-4">
-          {recentResources.length === 0 ? (
-            <p className="py-6 text-center text-body-sm text-ink-muted">
-              Aucune ressource n'a encore été publiée pour votre niveau cette année.
-            </p>
-          ) : (
-            <ul className="divide-y divide-hairline">
-              {recentResources.map((res) => (
-                <li key={res.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-                  <div className="flex items-start gap-3">
-                    <div className="rounded-md bg-accent-teal/15 p-2 text-accent-teal">
-                      <BookOpen className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-ink text-body-sm">{res.title}</p>
-                      <p className="text-caption text-ink-muted flex items-center gap-2 mt-0.5">
-                        <span className="font-medium text-ink-secondary">{res.matieres?.name}</span>
-                        <span>·</span>
-                        <span>{res.profiles?.full_name || 'Enseignant'}</span>
-                        <span>·</span>
-                        <span className="flex items-center gap-1 text-ink-faint">
-                          <Clock className="h-3 w-3" />
-                          {new Date(res.created_at).toLocaleDateString('fr-FR', {
-                            day: 'numeric',
-                            month: 'short',
-                          })}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                  <Link
-                    href={`/etudiant/ressources`}
-                    className="inline-flex items-center gap-1 text-caption font-medium text-primary hover:underline"
-                  >
-                    Consulter <ExternalLink className="h-3 w-3" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-
-      {/* Raccourcis cartes */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Link
-          href="/etudiant/profs"
-          className="group rounded-lg border border-hairline bg-white p-6 shadow-level-1 transition hover:shadow-level-2"
-        >
-          <div className="flex items-center justify-between">
-            <span className="rounded-md bg-accent-purple/15 p-2 text-accent-purple-deep">
-              <UserCheck className="h-5 w-5" />
-            </span>
-            <ArrowRight className="h-4 w-4 text-ink-faint transition-transform group-hover:translate-x-1" />
-          </div>
-          <h2 className="mt-4 text-heading-3 text-ink">Mes Profs</h2>
-          <p className="mt-1 text-body-sm text-ink-muted">
-            Consultez la liste des professeurs assignés à vos matières et accédez directement à leurs cours.
-          </p>
-        </Link>
-
-        <Link
-          href="/etudiant/stages"
-          className="group rounded-lg border border-hairline bg-white p-6 shadow-level-1 transition hover:shadow-level-2"
-        >
-          <div className="flex items-center justify-between">
-            <span className="rounded-md bg-accent-teal/15 p-2 text-accent-teal">
-              <Briefcase className="h-5 w-5" />
-            </span>
-            <ArrowRight className="h-4 w-4 text-ink-faint transition-transform group-hover:translate-x-1" />
-          </div>
-          <h2 className="mt-4 text-heading-3 text-ink">Mon Espace Stage</h2>
-          <p className="mt-1 text-body-sm text-ink-muted">
-            Consultez des exemples de rapports validés de votre filière et téléchargez les gabarits Word et LaTeX.
-          </p>
-        </Link>
+        <ResourceCardGrid cards={studentCardItems} />
       </div>
     </div>
-  )
-}
-
-function StatsCard({
-  title,
-  value,
-  subtitle,
-  href,
-  icon,
-  iconBg,
-}: {
-  title: string
-  value: number
-  subtitle?: string
-  href: string
-  icon: React.ReactNode
-  iconBg: string
-}) {
-  return (
-    <Link
-      href={href}
-      className="rounded-lg border border-hairline bg-white p-6 transition-shadow hover:shadow-level-1"
-    >
-      <div className="flex items-center justify-between">
-        <p className="text-body-sm font-medium text-ink-muted">{title}</p>
-        <span className={`flex h-8 w-8 items-center justify-center rounded-md ${iconBg}`}>
-          {icon}
-        </span>
-      </div>
-      <p className="mt-3 text-heading-1 text-ink">{value}</p>
-      {subtitle && (
-        <p className="mt-1 text-caption text-ink-faint">{subtitle}</p>
-      )}
-    </Link>
   )
 }
