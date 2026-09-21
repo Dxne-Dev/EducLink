@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { PageHeader } from '@/components/layout/PageHeader'
 import { formatDate, formatFileSize } from '@/lib/utils'
 import { TemplateForm } from '@/app/(dashboard)/dashboard/templates/template-form'
 import { TemplateDeleteButton } from '@/app/(dashboard)/dashboard/templates/template-delete-button'
@@ -25,12 +26,11 @@ export default async function RapportsAdminPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
-      <div>
-        <h1 className="text-heading-2 text-ink">Espace Gabarits & Ressources</h1>
-        <p className="mt-1 text-body-sm text-ink-muted">
-          Alimentez le catalogue en libre-service (gabarits Word/LaTeX, guides méthodologiques, exemples par filière).
-        </p>
-      </div>
+      <PageHeader
+        breadcrumb={[{ label: 'Administration', href: '/admin/dashboard' }, { label: 'Stages & Gabarits' }]}
+        title="Espace Gabarits & Ressources"
+        subtitle="Alimentez le catalogue en libre-service (gabarits Word/LaTeX, guides méthodologiques, exemples par filière)."
+      />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-1">
