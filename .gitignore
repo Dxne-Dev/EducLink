@@ -39,6 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+*.crlf_check
 
 # binary fonts (served from public/fonts/ instead)
 *.otf
@@ -59,3 +60,17 @@ favicon_io/
 .env
 .env.*
 !.env.example
+# debug & tooling artifacts (chrome capture profile, agent worktrees, AI tool settings)
+.repro/
+.kilo/
+.claude/settings.local.json
+
+# dev logs
+*.log
+
+# keep the active app font (loaded by next/font in src/app/layout.tsx)
+!src/app/amatry.otf
+
+# supabase CLI cache & test leftovers
+supabase/.temp/
+*.crlf_check
