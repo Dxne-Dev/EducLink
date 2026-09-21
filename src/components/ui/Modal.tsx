@@ -36,18 +36,17 @@ function Modal({ open, onClose, children, className }: ModalProps) {
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={(e) => { if (e.target === overlayRef.current) onClose() }}
     >
-      <div className="fixed inset-0 bg-black/40" />
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-xs" />
       <div
         className={cn(
-          // ex-modal-card : chrome feature-card + élévation 2
-          'relative z-50 w-full max-w-lg rounded-lg border border-hairline bg-white p-6 shadow-level-2',
+          'relative z-50 w-full max-w-lg rounded-2xl border border-hairline bg-white dark:bg-slate-900 dark:border-slate-800 p-6 shadow-2xl transition-colors',
           className
         )}
       >
         <button
           onClick={onClose}
           aria-label="Fermer"
-          className="absolute right-4 top-4 text-ink-faint transition-colors hover:text-ink"
+          className="absolute right-4 top-4 text-ink-faint hover:text-ink dark:text-slate-400 dark:hover:text-slate-100 transition-colors"
         >
           <X className="h-4 w-4" />
         </button>
@@ -58,15 +57,14 @@ function Modal({ open, onClose, children, className }: ModalProps) {
 }
 
 function ModalTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  // text-heading-2 : 26px / 700 / −0.625px tracking
   return (
-    <h2 className={cn('text-heading-2 text-ink', className)} {...props} />
+    <h2 className={cn('text-heading-2 text-ink dark:text-slate-100', className)} {...props} />
   )
 }
 
 function ModalDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
   return (
-    <p className={cn('mt-2 text-body-sm text-ink-muted', className)} {...props} />
+    <p className={cn('mt-2 text-body-sm text-ink-muted dark:text-slate-400', className)} {...props} />
   )
 }
 

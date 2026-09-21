@@ -31,10 +31,10 @@ export default async function EtudiantLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-canvas-soft" suppressHydrationWarning>
+    <div className="flex min-h-screen bg-canvas-soft dark:bg-slate-950 text-ink dark:text-slate-100 transition-colors" suppressHydrationWarning>
       <Sidebar role="student" />
       <div className="flex min-w-0 flex-1 flex-col" suppressHydrationWarning>
-        <Header fullName={profile?.full_name} />
+        <Header fullName={profile?.full_name} role="student" />
         <main className="flex-1 p-6" suppressHydrationWarning>{children}</main>
       </div>
     </div>

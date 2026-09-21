@@ -269,7 +269,7 @@ export function MatiereForm({
         </div>
 
         {/* Zone de Tags interactive façon YouTube */}
-        <div className="mt-1.5 flex min-h-[44px] flex-wrap items-center gap-1.5 rounded-lg border border-hairline bg-white p-2 shadow-sm focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+        <div className="mt-1.5 flex min-h-[44px] flex-wrap items-center gap-1.5 rounded-lg border border-hairline bg-white dark:bg-slate-900 dark:border-slate-700 p-2 shadow-sm focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
           {matiereTags.map((tag, idx) => (
             <span
               key={idx}
@@ -330,7 +330,7 @@ export function MatiereForm({
           )}
         </div>
 
-        <div className="mt-1.5 flex min-h-[40px] flex-wrap items-center gap-1.5 rounded-lg border border-hairline bg-white p-2 shadow-sm focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+        <div className="mt-1.5 flex min-h-[40px] flex-wrap items-center gap-1.5 rounded-lg border border-hairline bg-white dark:bg-slate-900 dark:border-slate-700 p-2 shadow-sm focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
           {codeTags.map((code, idx) => (
             <span
               key={idx}
@@ -383,7 +383,7 @@ export function MatiereForm({
             {matiereTags.map((name, i) => (
               <span
                 key={i}
-                className="inline-flex items-center gap-1 rounded-md border border-hairline bg-white px-2 py-1 text-caption text-ink"
+                className="inline-flex items-center gap-1 rounded-md border border-hairline bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 px-2 py-1 text-caption text-ink"
               >
                 <span className="font-medium text-ink">{name}</span>
                 {codeTags[i] && (

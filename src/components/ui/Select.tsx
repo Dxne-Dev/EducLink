@@ -11,8 +11,8 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
       <select
         value={value}
         className={cn(
-          'flex h-9 w-full appearance-none rounded-sm border border-[rgb(221,221,221)] bg-white px-3 py-1.5 text-body-sm transition-all focus:border-primary focus:outline-none focus:shadow-level-1 disabled:cursor-not-allowed disabled:opacity-50',
-          isEmpty ? 'text-ink-faint' : 'text-ink',
+          'flex h-9 w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-body-sm transition-all focus:border-primary focus:outline-none focus:shadow-level-1 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100',
+          isEmpty ? 'text-ink-faint dark:text-slate-500' : 'text-ink dark:text-slate-100',
           className
         )}
         ref={ref}

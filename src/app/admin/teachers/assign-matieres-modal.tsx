@@ -149,8 +149,8 @@ export function AssignMatieresModal({
                   onClick={() => toggleMatiere(m.id)}
                   className={`flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors ${
                     isSelected
-                      ? 'border-primary bg-primary/5 text-ink'
-                      : 'border-hairline bg-white hover:bg-canvas-soft text-ink-muted'
+                      ? 'border-primary bg-primary/5 dark:bg-primary/10 text-ink dark:text-slate-100'
+                      : 'border-hairline bg-white hover:bg-canvas-soft text-ink-muted dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-700 dark:text-slate-400'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -158,7 +158,7 @@ export function AssignMatieresModal({
                       className={`grid size-5 place-content-center rounded border transition-colors ${
                         isSelected
                           ? 'border-primary bg-primary text-white'
-                          : 'border-hairline bg-white'
+                          : 'border-hairline bg-white dark:bg-slate-900 dark:border-slate-600'
                       }`}
                     >
                       {isSelected && <Check className="h-3.5 w-3.5 stroke-[3]" />}

@@ -36,6 +36,8 @@ export const metadata: Metadata = {
   manifest: "/site.webmanifest",
 };
 
+import { ThemeProvider } from "@/components/theme-provider";
+
 export default function RootLayout({
   children,
 }: {
@@ -47,7 +49,11 @@ export default function RootLayout({
       className={`${inter.variable} ${instrumentSerif.variable} ${amatry.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col" suppressHydrationWarning>{children}</body>
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

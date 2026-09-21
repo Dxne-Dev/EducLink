@@ -1,11 +1,10 @@
 import { cn } from '@/lib/utils'
 
 function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  // feature-card : coque blanche, hairline seule (élévation 0)
   return (
     <div
       className={cn(
-        'rounded-2xl border border-hairline bg-white',
+        'rounded-2xl border border-hairline bg-white dark:bg-slate-900 dark:border-slate-800 shadow-xs transition-colors',
         className
       )}
       {...props}
@@ -18,10 +17,9 @@ function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement
 }
 
 function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  // text-heading-3 : 22px / 700 / −0.25px tracking / 1.27 lh
   return (
     <h3
-      className={cn('text-heading-3 text-ink', className)}
+      className={cn('text-heading-3 text-ink dark:text-slate-100', className)}
       {...props}
     />
   )
@@ -29,7 +27,7 @@ function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElem
 
 function CardDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
   return (
-    <p className={cn('mt-1 text-body-sm text-ink-muted', className)} {...props} />
+    <p className={cn('mt-1 text-body-sm text-ink-muted dark:text-slate-400', className)} {...props} />
   )
 }
 

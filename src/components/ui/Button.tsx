@@ -13,10 +13,10 @@ const buttonVariants = cva(
           'bg-primary text-white rounded hover:active:scale-[0.97] shadow-level-1',
         // Pill blanc avec ombre — CTA secondaire
         secondary:
-          'bg-white text-ink rounded border border-hairline shadow-level-1 hover:shadow-level-2',
+          'bg-white text-ink rounded border border-hairline shadow-level-1 hover:shadow-level-2 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-700',
         // Bouton utilitaire — radius serré 4px, bordure hairline
         utility:
-          'bg-white text-ink rounded border border-hairline text-body-sm',
+          'bg-white text-ink rounded border border-hairline text-body-sm dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-700',
         // Lien texte bleu
         link: 'text-primary underline-offset-4 hover:underline p-0 h-auto',
         // Ghost — transparent

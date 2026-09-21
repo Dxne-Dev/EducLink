@@ -7,10 +7,10 @@ const alertVariants = cva(
     variants: {
       variant: {
         // Statut porté par la palette sticker (spec Notion)
-        default: 'border-hairline bg-white text-ink-secondary',
-        success: 'border-success/25 bg-success/10 text-success',
-        warning: 'border-warning/25 bg-warning/10 text-warning',
-        danger: 'border-danger/25 bg-danger/10 text-danger',
+        default: 'border-hairline bg-white text-ink-secondary dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200',
+        success: 'border-success/25 bg-success/10 text-success dark:bg-emerald-950/30 dark:border-emerald-800/40',
+        warning: 'border-warning/25 bg-warning/10 text-warning dark:bg-amber-950/30 dark:border-amber-800/40',
+        danger: 'border-danger/25 bg-danger/10 text-danger dark:bg-red-950/30 dark:border-red-800/40',
       },
     },
     defaultVariants: {
