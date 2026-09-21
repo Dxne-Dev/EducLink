@@ -14,14 +14,13 @@ import { createClient } from '@/lib/supabase/client'
  */
 export function useRealtimeRefresh(table: string, channel: string) {
   const router = useRouter()
-  // On garde une ref stable pour éviter de re-créer l'abonnement à chaque render
   const routerRef = useRef(router)
   routerRef.current = router
 
   useEffect(() => {
     const supabase = createClient()
 
-    const sub = supabase
+    const ch = supabase
       .channel(channel, {
         config: {
           broadcast: { self: false },
@@ -31,7 +30,6 @@ export function useRealtimeRefresh(table: string, channel: string) {
         'postgres_changes',
         { event: '*', schema: 'public', table },
         () => {
-          // Re-fetch le Server Component parent (sans full page reload)
           routerRef.current.refresh()
         }
       )
@@ -39,14 +37,13 @@ export function useRealtimeRefresh(table: string, channel: string) {
         'broadcast',
         { event: 'refresh' },
         () => {
-          // Reçu lors d'un broadcast explicite (ex: passage en privé, suppression)
           routerRef.current.refresh()
         }
       )
       .subscribe()
 
     return () => {
-      supabase.removeChannel(sub)
+      supabase.removeChannel(ch)
     }
-  }, [table, channel]) // stable — ne change jamais après le montage
+  }, [table, channel])
 }

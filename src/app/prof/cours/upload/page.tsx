@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/Button'
 import { Alert } from '@/components/ui/Alert'
 import { RESOURCE_TYPE_LABELS, ALLOWED_RESOURCE_TYPES } from '@/lib/constants'
 import { createResourceMeta } from '@/lib/actions/resources.actions'
-import { emitRealtimeRefresh } from '@/lib/realtime-broadcast'
 import { UploadCloud, CheckCircle2, FileText } from 'lucide-react'
 import type { ResourceVisibility } from '@/types/database'
 
@@ -33,6 +32,7 @@ export default function ProfUploadResourcePage() {
   const [selectedPromo, setSelectedPromo] = useState('')
   const [loadingData, setLoadingData] = useState(true)
   const [myMatiereIds, setMyMatiereIds] = useState<string[] | null>(null)
+  const [myFiliereIds, setMyFiliereIds] = useState<string[] | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   const supabase = createClient()
@@ -57,9 +57,19 @@ export default function ProfUploadResourcePage() {
 
       const { data: tmRows } = await tmQuery
       if (tmRows && tmRows.length > 0) {
-        setMyMatiereIds(tmRows.map((r: any) => r.matiere_id))
+        const ids = tmRows.map((r: any) => r.matiere_id)
+        setMyMatiereIds(ids)
+        const { data: matRows } = await supabase
+          .from('matieres')
+          .select('niveau_id, niveaux(filiere_id)')
+          .in('id', ids)
+        const fIds = [...new Set(
+          matRows?.flatMap((r: any) => r.niveaux ? [r.niveaux.filiere_id] : []).filter(Boolean) ?? []
+        )]
+        setMyFiliereIds(fIds)
       } else {
         setMyMatiereIds([])
+        setMyFiliereIds([])
       }
     })
   }, [])
@@ -228,7 +238,6 @@ export default function ProfUploadResourcePage() {
       return
     }
 
-    emitRealtimeRefresh('realtime:resources')
     router.push('/prof/mes-cours')
     router.refresh()
   }
@@ -314,7 +323,7 @@ export default function ProfUploadResourcePage() {
                   <option value="" disabled>
                     {loadingData ? 'Chargement des filières...' : 'Sélectionner une filière'}
                   </option>
-                  {filieres.map((f) => (
+                  {filieres.filter(f => !myFiliereIds || myFiliereIds.includes(f.id)).map((f) => (
                     <option key={f.id} value={f.id}>{f.name} ({f.code})</option>
                   ))}
                 </Select>

@@ -2,7 +2,6 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import { setResourceVisibility } from '@/lib/actions/resources.actions'
-import { emitRealtimeRefresh } from '@/lib/realtime-broadcast'
 import { Globe, Lock } from 'lucide-react'
 import type { ResourceVisibility } from '@/types/database'
 import { cn } from '@/lib/utils'
@@ -28,7 +27,6 @@ export function VisibilityToggleButton({ resourceId, currentVisibility }: Visibi
       const res = await setResourceVisibility(resourceId, next)
       if (!res?.error) {
         setVisibility(next)
-        emitRealtimeRefresh('realtime:resources')
       }
     })
   }

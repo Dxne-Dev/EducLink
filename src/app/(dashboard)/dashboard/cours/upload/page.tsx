@@ -12,7 +12,6 @@ import { Alert } from '@/components/ui/Alert'
 import { RESOURCE_TYPE_LABELS, ALLOWED_RESOURCE_TYPES } from '@/lib/constants'
 
 import { createResource } from '@/lib/actions/resources.actions'
-import { emitRealtimeRefresh } from '@/lib/realtime-broadcast'
 
 export default function UploadResourcePage() {
   const router = useRouter()
@@ -27,6 +26,7 @@ export default function UploadResourcePage() {
   const [loadingData, setLoadingData] = useState(true)
   // IDs des matières assignées à l'enseignant (filtre côté client)
   const [myMatiereIds, setMyMatiereIds] = useState<string[] | null>(null)
+  const [myFiliereIds, setMyFiliereIds] = useState<string[] | null>(null)
 
   const supabase = createClient()
 
@@ -39,9 +39,19 @@ export default function UploadResourcePage() {
         .select('matiere_id')
         .eq('teacher_id', user.id)
       if (tmRows && tmRows.length > 0) {
-        setMyMatiereIds(tmRows.map((r: any) => r.matiere_id))
+        const ids = tmRows.map((r: any) => r.matiere_id)
+        setMyMatiereIds(ids)
+        const { data: matRows } = await supabase
+          .from('matieres')
+          .select('niveau_id, niveaux(filiere_id)')
+          .in('id', ids)
+        const fIds = [...new Set(
+          matRows?.flatMap((r: any) => r.niveaux ? [r.niveaux.filiere_id] : []).filter(Boolean) ?? []
+        )]
+        setMyFiliereIds(fIds)
       } else {
-        setMyMatiereIds([]) // pas de restriction si aucune matière assignée
+        setMyMatiereIds([])
+        setMyFiliereIds([])
       }
     })
   }, [])
@@ -138,7 +148,6 @@ export default function UploadResourcePage() {
       return
     }
 
-    emitRealtimeRefresh('realtime:resources')
     router.push('/dashboard/mes-cours')
     router.refresh()
   }
@@ -222,7 +231,7 @@ export default function UploadResourcePage() {
                   <option value="" disabled>
                     {loadingData ? 'Chargement des filières...' : 'Sélectionner une filière'}
                   </option>
-                  {filieres.map((f) => (
+                  {filieres.filter(f => !myFiliereIds || myFiliereIds.includes(f.id)).map((f) => (
                     <option key={f.id} value={f.id}>{f.name} ({f.code})</option>
                   ))}
                 </Select>

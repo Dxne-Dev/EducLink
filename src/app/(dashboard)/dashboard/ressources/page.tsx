@@ -17,6 +17,7 @@ import Link from 'next/link'
 import type { ResourceType } from '@/types/database'
 import { formatFileSize } from '@/lib/utils'
 import { RealtimeResourcesWatcher } from '@/components/realtime/RealtimeResourcesWatcher'
+import { ResourceViewLogger } from '@/components/resource/ResourceViewLogger'
 
 export const metadata = { title: 'Edulink - Mes Ressources' }
 
@@ -307,23 +308,27 @@ export default async function MesRessourcesPage({ searchParams }: MesRessourcesP
                 <div className="flex items-center gap-2 pt-1 border-t border-hairline">
                   {resource.signedUrl ? (
                     <>
-                      <a
-                        href={resource.signedUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-md bg-primary/10 py-1.5 px-3 text-caption font-medium text-primary hover:bg-primary/20 transition-colors"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        Consulter
-                      </a>
-                      <a
-                        href={resource.signedUrl}
-                        download={resource.title}
-                        className="inline-flex items-center justify-center rounded-md border border-hairline p-1.5 text-ink-muted hover:text-ink hover:bg-canvas-soft transition-colors"
-                        title="Télécharger"
-                      >
-                        <Download className="h-3.5 w-3.5" />
-                      </a>
+                      <ResourceViewLogger resourceId={resource.id} action="view">
+                        <a
+                          href={resource.signedUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-md bg-primary/10 py-1.5 px-3 text-caption font-medium text-primary hover:bg-primary/20 transition-colors"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          Consulter
+                        </a>
+                      </ResourceViewLogger>
+                      <ResourceViewLogger resourceId={resource.id} action="download">
+                        <a
+                          href={resource.signedUrl}
+                          download={resource.title}
+                          className="inline-flex items-center justify-center rounded-md border border-hairline p-1.5 text-ink-muted hover:text-ink hover:bg-canvas-soft transition-colors"
+                          title="Télécharger"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                        </a>
+                      </ResourceViewLogger>
                     </>
                   ) : (
                     <span className="text-caption text-ink-faint italic py-1">Fichier indisponible</span>

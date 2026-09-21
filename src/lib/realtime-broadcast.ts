@@ -1,24 +1,16 @@
 import { createClient } from '@/lib/supabase/client'
 
-/**
- * Envoie un événement de diffusion (broadcast) en temps réel via Supabase Realtime.
- * Cela permet de notifier TOUS les clients connectés (étudiants, professeurs, admins)
- * même lorsqu'une modification (ex: passage d'un cours en privé) échapperait aux
- * filtres RLS Postgres standard.
- */
+let channelCounter = 0
+
 export async function emitRealtimeRefresh(channelName: string = 'realtime:resources') {
   try {
     const supabase = createClient()
-    const channel = supabase.channel(channelName)
-    
-    // Si le channel est déjà prêt ou s'abonne pour émettre
+    const uniqueName = `${channelName}:${++channelCounter}:${Date.now()}`
+    const channel = supabase.channel(uniqueName)
     channel.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
-        channel.send({
-          type: 'broadcast',
-          event: 'refresh',
-          payload: { timestamp: Date.now() },
-        })
+        channel.send({ type: 'broadcast', event: 'refresh', payload: { timestamp: Date.now() } })
+        setTimeout(() => { supabase.removeChannel(channel) }, 2000)
       }
     })
   } catch (err) {

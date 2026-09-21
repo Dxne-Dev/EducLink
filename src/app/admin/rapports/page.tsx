@@ -5,26 +5,14 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { formatDate, formatFileSize } from '@/lib/utils'
 import { TemplateForm } from '@/app/(dashboard)/dashboard/templates/template-form'
 import { TemplateDeleteButton } from '@/app/(dashboard)/dashboard/templates/template-delete-button'
-import { ReportUploadForm } from './report-upload-form'
-import { ReportValidateButton } from './report-validate-button'
-import { ReportDeleteButton } from './report-delete-button'
-import { Briefcase, FileCode, Compass, Award, FileText, Plus, Download, GraduationCap } from 'lucide-react'
+import { FileCode, Compass, Award, FileText, Plus, GraduationCap } from 'lucide-react'
 
-export const metadata = { title: 'Edulink - Gestion des Stages & Gabarits' }
+export const metadata = { title: 'Edulink - Gabarits & Ressources' }
 
 export default async function RapportsAdminPage() {
   const supabase = await createClient()
 
-  const [internshipsRes, filieresRes, templatesRes] = await Promise.all([
-    supabase
-      .from('internships')
-      .select(`
-        *,
-        profiles(full_name),
-        promotions(name),
-        internship_reports(id, file_path, is_validated, grade, validated_at)
-      `)
-      .order('created_at', { ascending: false }),
+  const [filieresRes, templatesRes] = await Promise.all([
     supabase.from('filieres').select('id, name, code').order('name'),
     supabase
       .from('templates')
@@ -32,23 +20,19 @@ export default async function RapportsAdminPage() {
       .order('created_at', { ascending: false }),
   ])
 
-  const internships = internshipsRes.data ?? []
   const filieresList = filieresRes.data ?? []
   const templatesList = templatesRes.data ?? []
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
-      {/* En-tête */}
       <div>
-        <h1 className="text-heading-2 text-ink">Espace Stage & Gabarits Officiels</h1>
+        <h1 className="text-heading-2 text-ink">Espace Gabarits & Ressources</h1>
         <p className="mt-1 text-body-sm text-ink-muted">
-          Alimentez le catalogue en libre-service (gabarits Word/LaTeX, guides méthodologiques, exemples par filière) et suivez les stages des étudiants.
+          Alimentez le catalogue en libre-service (gabarits Word/LaTeX, guides méthodologiques, exemples par filière).
         </p>
       </div>
 
-      {/* BLOC 1 : Approvisionnement du Catalogue (Gabarits & Guides) */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Formulaire d'ajout rapide */}
         <div className="lg:col-span-1">
           <Card className="sticky top-6">
             <CardHeader>
@@ -68,7 +52,6 @@ export default async function RapportsAdminPage() {
           </Card>
         </div>
 
-        {/* Liste des documents du catalogue */}
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
@@ -128,66 +111,6 @@ export default async function RapportsAdminPage() {
           </Card>
         </div>
       </div>
-
-      {/* BLOC 2 : Suivi et Validation des Déclarations */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-title">Suivi des stages déclarés par les étudiants</CardTitle>
-          <CardDescription>{internships.length} stage(s) déclaré(s)</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {internships.length === 0 ? (
-            <EmptyState
-              icon={<Briefcase className="h-6 w-6 text-ink-faint" />}
-              title="Aucun stage déclaré"
-              description="Les stages déclarés par les étudiants apparaîtront ici pour validation académique."
-            />
-          ) : (
-            <div className="space-y-4">
-              {internships.map((i) => {
-                const report = i.internship_reports?.[0] ?? null
-                return (
-                  <div key={i.id} className="rounded-lg border border-hairline p-4">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-ink">{i.subject}</p>
-                          {report ? (
-                            report.is_validated ? (
-                              <Badge variant="success">Validé</Badge>
-                            ) : (
-                              <Badge variant="warning">Rapport déposé</Badge>
-                            )
-                          ) : (
-                            <Badge variant="secondary">Pas de rapport</Badge>
-                          )}
-                        </div>
-                        <p className="mt-1 text-body-sm text-ink-muted">
-                          {i.company_name} · {i.profiles?.full_name} · {i.promotions?.name}
-                        </p>
-                        <p className="mt-0.5 text-caption text-ink-faint">
-                          {formatDate(i.start_date)} → {formatDate(i.end_date)}
-                          {report?.validated_at ? ` · validé le ${formatDate(report.validated_at)}` : ''}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {report && !report.is_validated && (
-                          <ReportValidateButton reportId={report.id} />
-                        )}
-                        {report && report.is_validated && report.grade != null && (
-                          <Badge variant="success">Note : {report.grade}/20</Badge>
-                        )}
-                        {report && <ReportDeleteButton reportId={report.id} />}
-                      </div>
-                    </div>
-                    {(!report || !report.is_validated) && <ReportUploadForm internshipId={i.id} />}
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   )
 }

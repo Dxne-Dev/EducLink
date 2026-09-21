@@ -124,9 +124,18 @@ export default async function ProfMesCoursPage({
     .select('id, name, year_start, year_end')
     .order('year_start', { ascending: false })
 
-  const totalCount = resources?.length ?? 0
-  const publicCount = resources?.filter((r) => r.visibility === 'public').length ?? 0
-  const privateCount = resources?.filter((r) => r.visibility === 'private').length ?? 0
+  // Counts indépendants du filtre de visibilité
+  const makeCountQuery = (visibility?: string) => {
+    let q = supabase.from('resources').select('*', { count: 'exact', head: true }).eq('uploaded_by', user.id)
+    if (selectedMatiere) { q = q.eq('matiere_id', selectedMatiere.id) }
+    else if (params.matiere) { q = q.eq('matiere_id', params.matiere) }
+    if (params.type) q = q.eq('type', params.type)
+    if (visibility) q = q.eq('visibility', visibility)
+    return q
+  }
+  const { count: totalCount } = await makeCountQuery()
+  const { count: publicCount } = await makeCountQuery('public')
+  const { count: privateCount } = await makeCountQuery('private')
 
   const matiereQueryParam = params.matiere ? `&matiere=${encodeURIComponent(params.matiere)}` : ''
 
