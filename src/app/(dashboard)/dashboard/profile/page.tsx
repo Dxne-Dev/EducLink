@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Label } from '@/components/ui/Label'
 import { UserCircle, GraduationCap, Clock, ArrowLeft, Building2, Lock, ShieldCheck } from 'lucide-react'
 import Link from 'next/link'
-import { ProfileForm } from './profile-form'
+import { ProfileForm } from '@/components/profile/ProfileForm'
 
 export const metadata = { title: 'Edulink - Mon Profil' }
 

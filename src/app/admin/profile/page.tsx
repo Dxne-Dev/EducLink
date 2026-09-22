@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Badge } from '@/components/ui/Badge'
 import { UserCircle } from 'lucide-react'
 import { ProfileLayout } from '@/components/profile/ProfileLayout'
-import { ProfileForm } from '@/app/(dashboard)/dashboard/profile/profile-form'
+import { ProfileForm } from '@/components/profile/ProfileForm'
 
 export const metadata = { title: 'Edulink - Profil Administrateur' }
 
