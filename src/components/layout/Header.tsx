@@ -33,7 +33,7 @@ export function Header({ fullName, role }: HeaderProps) {
     : 'Étudiant'
 
   const profileHref = isAdmin
-    ? '/admin/users'
+    ? '/admin/profile'
     : isTeacher
     ? '/prof/profile'
     : '/etudiant/profile'

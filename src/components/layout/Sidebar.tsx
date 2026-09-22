@@ -274,6 +274,13 @@ export function Sidebar({ role }: SidebarProps) {
               active={pathname === '/admin/rapports'}
               open={open}
             />
+            <NavItem
+              href="/admin/profile"
+              icon={UserCircle}
+              label="Mon Profil"
+              active={pathname === '/admin/profile'}
+              open={open}
+            />
           </>
         )}
       </div>

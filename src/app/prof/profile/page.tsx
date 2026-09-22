@@ -1,9 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import { Label } from '@/components/ui/Label'
-import { UserCircle, GraduationCap, ArrowLeft, BookOpen, ShieldCheck, Lock } from 'lucide-react'
-import Link from 'next/link'
+import { UserCircle, BookOpen } from 'lucide-react'
+import { ProfileLayout } from '@/components/profile/ProfileLayout'
 import { ProfileForm } from '@/app/(dashboard)/dashboard/profile/profile-form'
 
 export const metadata = { title: 'Edulink - Profil Enseignant' }
@@ -61,74 +59,79 @@ export default async function TeacherProfilePage() {
   const rawFiliere = profile.filieres as unknown
   const filiereInfo = (Array.isArray(rawFiliere) ? rawFiliere[0] : rawFiliere) as { name: string; code: string } | null
 
-  return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      {/* En-tête profil */}
-      <div className="flex flex-col items-center gap-4 text-center border-b border-hairline pb-6">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary font-amatry text-3xl font-bold shadow-sm">
-          {profile.full_name?.charAt(0).toUpperCase() || 'P'}
-        </div>
-        <div>
-          <div className="flex items-center justify-center gap-2">
-            <h1 className="text-heading-2 text-ink">{profile.full_name || 'Enseignant'}</h1>
-            <span title="Profil Enseignant Vérifié">
-              <ShieldCheck className="h-5 w-5 text-accent-teal" />
-            </span>
-          </div>
-          <p className="text-body-sm text-ink-muted mt-0.5">{user.email}</p>
-        </div>
+  const fullName = profile.full_name || 'Enseignant'
+  const initial = fullName.charAt(0).toUpperCase()
+  const hasMatieres = Boolean(teacherMatieres && teacherMatieres.length > 0)
 
-        <div className="flex flex-wrap gap-2 justify-center">
+  return (
+    <ProfileLayout
+      breadcrumb={[{ label: 'Espace enseignant', href: '/prof/dashboard' }, { label: 'Mon profil' }]}
+      heading="Mon profil"
+      subtitle="Votre identité professionnelle, vos matières assignées et vos informations de connexion."
+      name={fullName}
+      email={user.email ?? ''}
+      initial={initial}
+      metaLine={
+        filiereInfo ? `Département ${filiereInfo.code || filiereInfo.name}` : undefined
+      }
+      badges={
+        <>
           <Badge variant="purple" className="flex items-center gap-1 font-semibold">
             <UserCircle className="h-3 w-3" />
             Enseignant / Professeur
           </Badge>
-          {filiereInfo && (
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <GraduationCap className="h-3 w-3" />
-              Département {filiereInfo.code || filiereInfo.name}
+          {hasMatieres && (
+            <Badge variant="teal" className="flex items-center gap-1">
+              <BookOpen className="h-3 w-3" />
+              {teacherMatieres?.length} matière(s) assignée(s)
             </Badge>
           )}
-        </div>
-      </div>
-
-      {/* Informations officielles */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-title flex items-center gap-2">
-                <Lock className="h-4 w-4 text-accent-purple-deep" />
-                Informations académiques & Matières assignées
-              </CardTitle>
-              <CardDescription>
-                Ces informations proviennent du registre officiel administré par l'établissement.
-              </CardDescription>
-            </div>
-            <span className="rounded-full bg-canvas-soft px-3 py-1 text-[11px] font-medium text-ink-muted flex items-center gap-1">
-              <Lock className="h-3 w-3" /> Certifié
-            </span>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-5 sm:grid-cols-2 text-body-sm">
-            <div className="rounded-lg border border-hairline bg-canvas-soft/50 p-3.5">
-              <Label className="text-caption font-medium text-ink-muted">Nom & Prénom</Label>
-              <p className="font-semibold text-ink mt-0.5">{profile.full_name || 'Non renseigné'}</p>
-              <p className="text-[11px] text-ink-faint mt-1">Identité déclarée au registre</p>
-            </div>
-
-            <div className="rounded-lg border border-hairline bg-canvas-soft/50 p-3.5">
-              <Label className="text-caption font-medium text-ink-muted">Email professionnel</Label>
-              <p className="font-mono text-ink mt-0.5">{user.email}</p>
-              <p className="text-[11px] text-ink-faint mt-1">Identifiant de session officiel</p>
-            </div>
-
-            <div className="rounded-lg border border-hairline bg-canvas-soft/50 p-3.5 sm:col-span-2">
-              <Label className="text-caption font-medium text-ink-muted">Matières & Unités d'enseignement assignées</Label>
-              {teacherMatieres && teacherMatieres.length > 0 ? (
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {teacherMatieres.map((item: any, idx: number) => {
+        </>
+      }
+      sectionsTitle="Informations académiques & Matières assignées"
+      sectionsDescription="Ces informations proviennent du registre officiel administré par l'établissement."
+      readOnly
+      readOnlyLabel="Certifié"
+      sections={[
+        {
+          title: 'Identité',
+          fields: [
+            {
+              label: 'Nom & Prénom',
+              value: profile.full_name || 'Non renseigné',
+              hint: 'Identité déclarée au registre',
+            },
+            {
+              label: 'Email professionnel',
+              value: <span className="font-mono">{user.email}</span>,
+              hint: 'Identifiant de session officiel',
+            },
+          ],
+        },
+        {
+          title: 'Inscription',
+          fields: [
+            {
+              label: "Date d'enregistrement",
+              value: new Date(profile.created_at).toLocaleDateString('fr-FR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              }),
+              hint: "Date d'ouverture du compte",
+            },
+          ],
+        },
+        {
+          title: "Matières & Unités d'enseignement assignées",
+          wide: true,
+          fields: [
+            {
+              label: 'Matières assignées',
+              full: true,
+              value: hasMatieres ? (
+                <div className="flex flex-wrap gap-2">
+                  {teacherMatieres?.map((item: any, idx: number) => {
                     const m = item.matiere
                     if (!m) return null
                     const niveauObj = Array.isArray(m.niveaux) ? m.niveaux[0] : m.niveaux
@@ -138,7 +141,7 @@ export default async function TeacherProfilePage() {
                     return (
                       <span
                         key={idx}
-                        className="inline-flex items-center gap-1.5 rounded-md border border-hairline bg-surface px-2.5 py-1 text-caption font-medium text-ink"
+                        className="inline-flex items-center gap-1.5 rounded-md border border-hairline bg-canvas-soft px-2.5 py-1 text-caption font-medium text-ink dark:border-slate-800 dark:bg-slate-800 dark:text-slate-100"
                       >
                         <BookOpen className="h-3.5 w-3.5 text-primary" />
                         {m.name} {filiereCode ? `(${filiereCode})` : ''} {niveauName ? `• ${niveauName}` : ''}
@@ -147,37 +150,17 @@ export default async function TeacherProfilePage() {
                   })}
                 </div>
               ) : (
-                <p className="text-ink-muted text-caption mt-1">Aucune matière assignée pour le moment.</p>
-              )}
-            </div>
-
-            <div className="rounded-lg border border-hairline bg-canvas-soft/50 p-3.5 sm:col-span-2">
-              <Label className="text-caption font-medium text-ink-muted">Date d'enregistrement</Label>
-              <p className="font-semibold text-ink mt-0.5">
-                {new Date(profile.created_at).toLocaleDateString('fr-FR', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Formulaire mot de passe */}
-      <ProfileForm />
-
-      {/* Retour dashboard */}
-      <div className="pt-2">
-        <Link
-          href="/prof/dashboard"
-          className="inline-flex items-center gap-2 text-body-sm font-medium text-ink-muted hover:text-ink transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Retour au tableau de bord enseignant
-        </Link>
-      </div>
-    </div>
+                <span className="text-caption text-ink-muted dark:text-slate-400">
+                  Aucune matière assignée pour le moment.
+                </span>
+              ),
+            },
+          ],
+        },
+      ]}
+      extraContent={<ProfileForm />}
+      backHref="/prof/dashboard"
+      backLabel="Retour au tableau de bord enseignant"
+    />
   )
 }
