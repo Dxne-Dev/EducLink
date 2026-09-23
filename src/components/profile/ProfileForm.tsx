@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/Label'
 import { Button } from '@/components/ui/Button'
 import { Alert } from '@/components/ui/Alert'
 import { updateMyPassword } from '@/lib/actions/user.actions'
-import { KeyRound, ShieldAlert, CheckCircle2 } from 'lucide-react'
+import { KeyRound, CheckCircle2 } from 'lucide-react'
 
 export function ProfileForm() {
   const [password, setPassword] = useState('')
@@ -99,17 +99,6 @@ export function ProfileForm() {
           </form>
         </CardContent>
       </Card>
-
-      {/* Rappel de conformité pour les données académiques */}
-      <div className="rounded-lg border border-hairline bg-canvas-soft p-4 flex items-start gap-3">
-        <ShieldAlert className="h-5 w-5 text-accent-purple-deep shrink-0 mt-0.5" />
-        <div className="text-caption text-ink-muted">
-          <p className="font-medium text-ink">Verrouillage des données académiques</p>
-          <p className="mt-0.5">
-            Votre nom, prénom, filière, niveau et promotion sont strictement verrouillés pour garantir l'intégrité de vos attestations et relevés de notes. Pour toute régularisation ou changement d'orientation, veuillez vous adresser au secrétariat administratif.
-          </p>
-        </div>
-      </div>
     </div>
   )
 }
