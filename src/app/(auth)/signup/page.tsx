@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { MailCheck, Eye, EyeOff } from 'lucide-react'
+import { MailCheck, Eye, EyeOff, GraduationCap, UserCheck } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { AuthCard, GlassInput } from '@/components/auth/AuthCard'
 import { Button } from '@/components/ui/Button'
@@ -219,29 +220,40 @@ export default function SignupPage() {
         {/* Rôle */}
         <div className="auth-anim-element auth-delay-600 space-y-2">
           <Label htmlFor="role">Je suis</Label>
-          <GlassInput>
-            <div className="relative flex items-center">
-              <Select
-                id="role"
-                value={role}
-                onChange={(e) => {
-                  setRole(e.target.value as '' | 'student' | 'teacher')
-                  setFiliereId('')
-                }}
-                required
-                className="h-12 w-full appearance-none border-transparent bg-transparent px-4 pr-10 text-body-md shadow-none focus:shadow-none focus:outline-none"
-              >
-                <option value="" disabled hidden>Choisir un rôle</option>
-                <option value="student" className="bg-white text-ink">Étudiant</option>
-                <option value="teacher" className="bg-white text-ink">Enseignant</option>
-              </Select>
-              <div className="pointer-events-none absolute right-4 text-ink-muted">
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-          </GlassInput>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setRole('student')
+                setFiliereId('')
+              }}
+              className={cn(
+                'flex items-center justify-center gap-2.5 rounded-2xl border p-3.5 text-sm font-medium transition-all duration-150',
+                role === 'student'
+                  ? 'border-primary bg-primary/10 text-primary shadow-sm ring-2 ring-primary/20'
+                  : 'border-hairline bg-white/70 dark:bg-charcoal-card/70 text-ink-muted hover:border-border hover:text-ink'
+              )}
+            >
+              <GraduationCap className="h-4 w-4" />
+              Étudiant
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setRole('teacher')
+                setFiliereId('')
+              }}
+              className={cn(
+                'flex items-center justify-center gap-2.5 rounded-2xl border p-3.5 text-sm font-medium transition-all duration-150',
+                role === 'teacher'
+                  ? 'border-primary bg-primary/10 text-primary shadow-sm ring-2 ring-primary/20'
+                  : 'border-hairline bg-white/70 dark:bg-charcoal-card/70 text-ink-muted hover:border-border hover:text-ink'
+              )}
+            >
+              <UserCheck className="h-4 w-4" />
+              Enseignant
+            </button>
+          </div>
         </div>
 
         {/* Filière — uniquement pour les étudiants */}
@@ -259,18 +271,18 @@ export default function SignupPage() {
                       setNiveauId('')
                     }}
                     required
-                    className="h-12 w-full appearance-none border-transparent bg-transparent px-4 pr-10 text-body-md shadow-none focus:shadow-none focus:outline-none"
+                    className="h-12 w-full appearance-none border-transparent bg-transparent px-4 pr-10 text-body-md shadow-none focus:shadow-none focus:outline-none dark:text-white"
                   >
-                    <option value="" disabled hidden>
+                    <option value="" disabled hidden className="dark:bg-charcoal-card dark:text-white">
                       {loadingFilieres ? 'Chargement des filières...' : 'Sélectionner une filière'}
                     </option>
                     {filieres.map((f) => (
-                      <option key={f.id} value={f.id} className="bg-white text-ink">
+                      <option key={f.id} value={f.id} className="bg-white dark:bg-charcoal-card text-ink dark:text-white">
                         {f.name} {f.code ? `(${f.code})` : ''}
                       </option>
                     ))}
                     {!loadingFilieres && filieres.length === 0 && (
-                      <option value="" disabled>Aucune filière configurée</option>
+                      <option value="" disabled className="dark:bg-charcoal-card dark:text-white">Aucune filière configurée</option>
                     )}
                   </Select>
                   <div className="pointer-events-none absolute right-4 text-ink-muted">
@@ -292,13 +304,13 @@ export default function SignupPage() {
                     onChange={(e) => setNiveauId(e.target.value)}
                     required
                     disabled={!filiereId}
-                    className="h-12 w-full appearance-none border-transparent bg-transparent px-4 pr-10 text-body-md shadow-none focus:shadow-none focus:outline-none disabled:opacity-50"
+                    className="h-12 w-full appearance-none border-transparent bg-transparent px-4 pr-10 text-body-md shadow-none focus:shadow-none focus:outline-none disabled:opacity-50 dark:text-white"
                   >
-                    <option value="" disabled hidden>
+                    <option value="" disabled hidden className="dark:bg-charcoal-card dark:text-white">
                       {loadingNiveaux ? 'Chargement...' : !filiereId ? 'Sélectionnez d\'abord une filière' : 'Sélectionner un niveau'}
                     </option>
                     {niveaux.map((n) => (
-                      <option key={n.id} value={n.id} className="bg-white text-ink">
+                      <option key={n.id} value={n.id} className="bg-white dark:bg-charcoal-card text-ink dark:text-white">
                         {n.name}
                       </option>
                     ))}
