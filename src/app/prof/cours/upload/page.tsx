@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/Label'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
 import { Alert } from '@/components/ui/Alert'
+import { toast } from '@/components/ui/Toast'
 import { RESOURCE_TYPE_LABELS, ALLOWED_RESOURCE_TYPES } from '@/lib/constants'
 import { createResourceMeta } from '@/lib/actions/resources.actions'
 import {
@@ -245,10 +246,12 @@ export default function ProfUploadResourcePage() {
 
     if (res?.error) {
       setError(res.error)
+      toast.error(res.error)
       setLoading(false)
       return
     }
 
+    toast.success('Document pédagogique publié avec succès !')
     router.push('/prof/mes-cours')
     router.refresh()
   }

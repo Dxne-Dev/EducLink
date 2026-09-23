@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/Label'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
 import { Alert } from '@/components/ui/Alert'
+import { toast } from '@/components/ui/Toast'
 
 export function NiveauForm({ filieres }: { filieres: { id: string; name: string }[] }) {
   const [error, setError] = useState<string | null>(null)
@@ -16,7 +17,12 @@ export function NiveauForm({ filieres }: { filieres: { id: string; name: string 
     setPending(true)
     setError(null)
     const res = await createNiveau(formData)
-    if (res?.error) setError(res.error)
+    if (res?.error) {
+      setError(res.error)
+      toast.error(res.error)
+    } else {
+      toast.success('Niveau créé avec succès !')
+    }
     setPending(false)
   }
 

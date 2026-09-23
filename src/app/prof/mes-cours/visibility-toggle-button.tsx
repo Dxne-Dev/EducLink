@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import { setResourceVisibility } from '@/lib/actions/resources.actions'
+import { toast } from '@/components/ui/Toast'
 import { Globe, Lock } from 'lucide-react'
 import type { ResourceVisibility } from '@/types/database'
 import { cn } from '@/lib/utils'
@@ -25,8 +26,11 @@ export function VisibilityToggleButton({ resourceId, currentVisibility }: Visibi
     const next: ResourceVisibility = visibility === 'public' ? 'private' : 'public'
     startTransition(async () => {
       const res = await setResourceVisibility(resourceId, next)
-      if (!res?.error) {
+      if (res?.error) {
+        toast.error(res.error)
+      } else {
         setVisibility(next)
+        toast.success(next === 'public' ? 'Ressource rendue publique' : 'Ressource rendue privée')
       }
     })
   }

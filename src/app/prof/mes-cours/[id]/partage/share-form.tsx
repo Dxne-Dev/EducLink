@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/Label'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
 import { Alert } from '@/components/ui/Alert'
+import { toast } from '@/components/ui/Toast'
 import type { ResourceVisibility } from '@/types/database'
 
 interface ShareFormProps {
@@ -35,8 +36,11 @@ export function ShareForm({ resourceId, availablePromos }: ShareFormProps) {
       const res = await grantResourceToPromo(resourceId, targetPromo, shareVisibility)
       if (res?.error) {
         setError(res.error)
+        toast.error(res.error)
       } else {
-        setSuccess('Accès accordé avec succès !')
+        const msg = 'Accès accordé avec succès !'
+        setSuccess(msg)
+        toast.success(msg)
         setTargetPromo('')
         emitRealtimeRefresh('realtime:resource_promo_access')
         emitRealtimeRefresh('realtime:resources')

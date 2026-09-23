@@ -82,7 +82,7 @@ export default async function UsersAdminPage() {
       emptyState={{
         title: 'Aucun utilisateur',
         description: 'Les comptes créés apparaîtront ici.',
-        icon: <Users className="h-8 w-8 text-ink-faint" />,
+        icon: <span className="iconify text-4xl text-primary" data-icon="solar:users-group-rounded-bold-duotone" />,
       }}
       renderActions={(u: any) => (
         <div className="flex items-center gap-2">

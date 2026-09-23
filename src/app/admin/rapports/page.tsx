@@ -118,15 +118,15 @@ export default async function RapportsAdminPage() {
 function getCategoryIcon(cat: string) {
   switch (cat) {
     case 'gabarit':
-      return <FileCode className="h-4 w-4" />
+      return <span className="iconify text-xl" data-icon="solar:code-file-bold-duotone" />
     case 'guide':
-      return <Compass className="h-4 w-4" />
+      return <span className="iconify text-xl" data-icon="solar:compass-bold-duotone" />
     case 'exemple':
-      return <Award className="h-4 w-4" />
+      return <span className="iconify text-xl" data-icon="solar:diploma-verified-bold-duotone" />
     case 'convention':
-      return <FileText className="h-4 w-4" />
+      return <span className="iconify text-xl" data-icon="solar:document-medicine-bold-duotone" />
     default:
-      return <FileText className="h-4 w-4" />
+      return <span className="iconify text-xl" data-icon="solar:file-text-bold-duotone" />
   }
 }
 

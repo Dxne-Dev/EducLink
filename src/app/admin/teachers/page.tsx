@@ -73,8 +73,8 @@ export default async function TeachersAdminPage() {
 
             return (
               <div className="flex items-start gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-orange/15 text-accent-orange-deep dark:bg-amber-900/30 dark:text-amber-300 font-amatry font-bold">
-                  {initial}
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent-orange/15 text-accent-orange-deep dark:bg-amber-900/30 dark:text-amber-300 shadow-sm ring-1 ring-accent-orange/20">
+                  <span className="iconify text-xl" data-icon="solar:user-check-bold-duotone" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -161,7 +161,7 @@ export default async function TeachersAdminPage() {
         title: 'Aucun enseignant habilité',
         description:
           'Ajoutez des enseignants via le formulaire ci-contre pour autoriser leur inscription et leur affecter des matières.',
-        icon: <Award className="h-8 w-8 text-ink-faint" />,
+        icon: <span className="iconify text-4xl text-accent-orange-deep" data-icon="solar:user-check-bold-duotone" />,
       }}
       formSlot={<TeacherRegistryForm filieres={filieres} />}
       formTitle="Habiliter un enseignant"

@@ -5,6 +5,7 @@ import { assignTeacherMatieres } from '@/lib/actions/admin.actions'
 import { Modal, ModalTitle, ModalDescription } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { toast } from '@/components/ui/Toast'
 import { BookMarked, Check, GraduationCap } from 'lucide-react'
 
 interface MatiereItem {
@@ -63,14 +64,19 @@ export function AssignMatieresModal({
 
   function handleSave() {
     startTransition(async () => {
-      await assignTeacherMatieres(
+      const res = await assignTeacherMatieres(
         {
           teacher_id: teacher.profile_id || undefined,
           teacher_registry_id: teacher.id,
         },
         selectedIds
       )
-      setOpen(false)
+      if (res?.error) {
+        toast.error(res.error)
+      } else {
+        toast.success(`Affectations mises à jour pour ${teacher.full_name}`)
+        setOpen(false)
+      }
     })
   }
 

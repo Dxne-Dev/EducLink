@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { FileX } from 'lucide-react'
+import { FileQuestion } from 'lucide-react'
 
 interface EmptyStateProps {
   icon?: React.ReactNode
@@ -12,20 +12,20 @@ interface EmptyStateProps {
 
 function EmptyState({ icon, title, description, action, className, iconBg }: EmptyStateProps) {
   return (
-    <div className={cn('flex flex-col items-center justify-center py-12 text-center', className)}>
+    <div className={cn('flex flex-col items-center justify-center py-14 px-4 text-center rounded-3xl border border-dashed border-hairline bg-canvas-soft/40 dark:border-slate-800/80 dark:bg-slate-900/30', className)}>
       <div
         className={cn(
-          'rounded-lg border border-dashed border-hairline p-3',
-          iconBg ?? 'bg-canvas-soft'
+          'flex h-16 w-16 items-center justify-center rounded-2xl shadow-xs transition-transform hover:scale-105',
+          iconBg ?? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-sky-300'
         )}
       >
-        {icon ?? <FileX className="h-6 w-6 text-ink-faint" />}
+        {icon ?? <FileQuestion className="h-8 w-8" />}
       </div>
-      <h3 className="mt-4 text-heading-3 text-ink">{title}</h3>
+      <h3 className="mt-4 text-lg font-bold text-ink dark:text-slate-100">{title}</h3>
       {description && (
-        <p className="mt-1 max-w-sm text-body-sm text-ink-muted">{description}</p>
+        <p className="mt-1.5 max-w-sm text-sm text-ink-muted dark:text-slate-400 leading-relaxed">{description}</p>
       )}
-      {action && <div className="mt-4">{action}</div>}
+      {action && <div className="mt-5">{action}</div>}
     </div>
   )
 }

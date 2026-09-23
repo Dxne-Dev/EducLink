@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Select } from '@/components/ui/Select'
 import { Alert } from '@/components/ui/Alert'
+import { toast } from '@/components/ui/Toast'
 
 export function TeacherRegistryForm({
   filieres,
@@ -29,12 +30,14 @@ export function TeacherRegistryForm({
 
     if (res?.error) {
       setError(res.error)
+      toast.error(res.error)
       setLoading(false)
       return
     }
 
     form.reset()
     setSuccess(true)
+    toast.success('Enseignant ajouté au registre avec succès !')
     setLoading(false)
   }
 

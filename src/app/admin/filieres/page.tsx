@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { GraduationCap } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { FiliereForm } from './filiere-form'
 import { DeleteFiliereButton } from './delete-button'
 import { EditFiliereModal } from './edit-filiere-modal'
@@ -31,8 +31,8 @@ export default async function FiliereAdminPage() {
           accessor: 'name',
           render: (value, row) => (
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-purple/15 text-accent-purple-deep dark:bg-purple-900/30 dark:text-purple-300">
-                <GraduationCap className="h-4 w-4" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary dark:bg-primary/20 dark:text-sky-300">
+                <Icon icon="solar:diploma-verified-bold-duotone" height={22} />
               </div>
               <div>
                 <span className="font-semibold text-ink dark:text-slate-100">{value}</span>
@@ -70,7 +70,7 @@ export default async function FiliereAdminPage() {
       emptyState={{
         title: 'Aucune filière',
         description: 'Créez votre première filière avec le formulaire ci-contre.',
-        icon: <GraduationCap className="h-8 w-8 text-ink-faint" />
+        icon: <Icon icon="solar:diploma-bold-duotone" height={32} />
       }}
       formSlot={<FiliereForm />}
       formTitle="Ajouter une filière"

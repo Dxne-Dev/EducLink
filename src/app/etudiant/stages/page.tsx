@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { Tooltip } from '@/components/ui/Tooltip'
 import { formatDate, formatFileSize } from '@/lib/utils'
 import {
   Download,
@@ -181,7 +182,7 @@ export default async function StudentStagesPage() {
         <Card className="rounded-3xl border border-hairline bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
           <CardContent className="py-12">
             <EmptyState
-              icon={<FileText className="h-8 w-8 text-ink-faint" />}
+              icon={<span className="iconify text-4xl text-accent-orange-deep" data-icon="solar:document-medicine-bold-duotone" />}
               title="Aucun document disponible"
               description="Les gabarits, exemples et guides seront publiés par l'administration."
             />
@@ -194,16 +195,16 @@ export default async function StudentStagesPage() {
             const isExemple = item.kind === 'exemple'
 
             const badgeBg = isGabarit
-              ? 'bg-accent-purple/20 text-accent-purple-deep dark:bg-purple-900/30 dark:text-purple-300'
+              ? 'bg-accent-purple/15 text-accent-purple-deep dark:bg-purple-900/40 dark:text-purple-300'
               : isExemple
-              ? 'bg-accent-teal/15 text-accent-teal dark:bg-teal-900/30 dark:text-teal-300'
+              ? 'bg-accent-teal/15 text-accent-teal dark:bg-teal-900/40 dark:text-teal-300'
               : 'bg-accent-orange/15 text-accent-orange-deep dark:bg-amber-900/30 dark:text-amber-300'
 
             const iconBg = isGabarit
-              ? 'bg-accent-purple/15 text-accent-purple-deep dark:bg-purple-900/30 dark:text-purple-300'
+              ? 'bg-accent-purple/15 text-accent-purple-deep dark:bg-purple-900/30 dark:text-purple-300 shadow-sm ring-1 ring-accent-purple/20'
               : isExemple
-              ? 'bg-accent-teal/15 text-accent-teal dark:bg-teal-900/30 dark:text-teal-300'
-              : 'bg-accent-orange/15 text-accent-orange-deep dark:bg-amber-900/30 dark:text-amber-300'
+              ? 'bg-accent-teal/15 text-accent-teal dark:bg-teal-900/30 dark:text-teal-300 shadow-sm ring-1 ring-accent-teal/20'
+              : 'bg-accent-orange/15 text-accent-orange-deep dark:bg-amber-900/30 dark:text-amber-300 shadow-sm ring-1 ring-accent-orange/20'
 
             return (
               <Card
@@ -214,11 +215,11 @@ export default async function StudentStagesPage() {
                   <div className="flex items-start gap-3">
                     <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${iconBg}`}>
                       {isGabarit ? (
-                        <Download className="h-5 w-5" />
+                        <span className="iconify text-2xl" data-icon="solar:code-file-bold-duotone" />
                       ) : isExemple ? (
-                        <Award className="h-5 w-5" />
+                        <span className="iconify text-2xl" data-icon="solar:diploma-verified-bold-duotone" />
                       ) : (
-                        <BookOpen className="h-5 w-5" />
+                        <span className="iconify text-2xl" data-icon="solar:compass-bold-duotone" />
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -265,14 +266,15 @@ export default async function StudentStagesPage() {
                         <ExternalLink className="h-3.5 w-3.5" />
                         Consulter
                       </a>
-                      <a
-                        href={item.signedUrl}
-                        download={item.name}
-                        className="inline-flex items-center justify-center rounded-xl border border-hairline dark:border-slate-700 p-2 text-ink-muted hover:text-ink hover:bg-canvas-soft dark:hover:bg-slate-800 transition-colors"
-                        title="Télécharger"
-                      >
-                        <Download className="h-3.5 w-3.5" />
-                      </a>
+                      <Tooltip content="Télécharger le fichier">
+                        <a
+                          href={item.signedUrl}
+                          download={item.name}
+                          className="inline-flex items-center justify-center rounded-xl border border-hairline dark:border-slate-700 p-2 text-ink-muted hover:text-ink hover:bg-canvas-soft dark:hover:bg-slate-800 transition-colors"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                        </a>
+                      </Tooltip>
                     </div>
                   )}
                 </CardContent>

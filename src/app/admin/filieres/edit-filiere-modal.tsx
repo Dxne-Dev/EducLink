@@ -7,6 +7,8 @@ import { Modal, ModalTitle, ModalDescription } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Alert } from '@/components/ui/Alert'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/Tooltip'
+import { toast } from '@/components/ui/Toast'
 import { Pencil } from 'lucide-react'
 
 interface FiliereItem {
@@ -51,7 +53,9 @@ export function EditFiliereModal({ filiere }: { filiere: FiliereItem }) {
       const res = await updateFiliere(filiere.id, formData)
       if (res?.error) {
         setError(res.error)
+        toast.error('Erreur de mise à jour', res.error)
       } else {
+        toast.success('Filière mise à jour', `La filière ${name} a été modifiée avec succès.`)
         setOpen(false)
       }
     })
@@ -59,15 +63,19 @@ export function EditFiliereModal({ filiere }: { filiere: FiliereItem }) {
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleOpen}
-        title="Modifier la filière"
-        className="h-8 w-8 p-0 text-ink-muted hover:text-ink hover:bg-canvas-soft"
-      >
-        <Pencil className="h-3.5 w-3.5" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleOpen}
+            className="h-8 w-8 p-0 text-ink-muted hover:text-ink hover:bg-canvas-soft dark:hover:bg-slate-800"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Modifier la filière</TooltipContent>
+      </Tooltip>
 
       <Modal open={open} onClose={() => setOpen(false)}>
         <ModalTitle>Modifier la filière</ModalTitle>

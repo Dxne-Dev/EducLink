@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/Button'
 import { Modal, ModalTitle, ModalDescription } from '@/components/ui/Modal'
 import { Select } from '@/components/ui/Select'
 import { Label } from '@/components/ui/Label'
-import { Trash2, ArrowUpRight, Power } from 'lucide-react'
+import { Tooltip } from '@/components/ui/Tooltip'
+import { toast } from '@/components/ui/Toast'
+import { Trash2, ArrowUpRight } from 'lucide-react'
 
 interface PromotionItem {
   id: string
@@ -46,7 +48,13 @@ export function PromotionActions({
 
   function toggleActive() {
     startTransition(async () => {
-      await setPromotionActive(promotion.id, !promotion.is_active)
+      const nextState = !promotion.is_active
+      await setPromotionActive(promotion.id, nextState)
+      if (nextState) {
+        toast.success(`Promotion "${promotion.name}" activée`)
+      } else {
+        toast.info(`Promotion "${promotion.name}" désactivée`)
+      }
     })
   }
 
@@ -54,6 +62,7 @@ export function PromotionActions({
     startTransition(async () => {
       await deletePromotion(promotion.id)
       setConfirmDelete(false)
+      toast.success(`Promotion "${promotion.name}" supprimée`)
     })
   }
 
@@ -62,47 +71,51 @@ export function PromotionActions({
     startTransition(async () => {
       await updatePromotionLevel(promotion.id, selectedNiveauId)
       setChangeNiveauOpen(false)
+      toast.success(`Passage de niveau effectué pour "${promotion.name}"`)
     })
   }
 
   return (
     <div className="flex items-center gap-1.5">
       {/* Passage niveau */}
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={() => setChangeNiveauOpen(true)}
-        disabled={pending}
-        title="Faire progresser le niveau de la promotion"
-        className="h-8 px-2 text-caption flex items-center gap-1"
-      >
-        <ArrowUpRight className="h-3.5 w-3.5 text-primary" />
-        <span className="hidden sm:inline">Passage niveau</span>
-      </Button>
+      <Tooltip content="Faire progresser le niveau de la promotion">
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => setChangeNiveauOpen(true)}
+          disabled={pending}
+          className="h-8 px-2 text-caption flex items-center gap-1"
+        >
+          <ArrowUpRight className="h-3.5 w-3.5 text-primary" />
+          <span className="hidden sm:inline">Passage niveau</span>
+        </Button>
+      </Tooltip>
 
       {/* Activer / Désactiver */}
-      <Button
-        variant={promotion.is_active ? 'secondary' : 'primary'}
-        size="sm"
-        onClick={toggleActive}
-        disabled={pending}
-        title={promotion.is_active ? 'Désactiver la promotion' : 'Activer la promotion'}
-        className="h-8 px-2.5 text-caption"
-      >
-        {promotion.is_active ? 'Désactiver' : 'Activer'}
-      </Button>
+      <Tooltip content={promotion.is_active ? 'Désactiver la promotion' : 'Activer la promotion'}>
+        <Button
+          variant={promotion.is_active ? 'secondary' : 'primary'}
+          size="sm"
+          onClick={toggleActive}
+          disabled={pending}
+          className="h-8 px-2.5 text-caption"
+        >
+          {promotion.is_active ? 'Désactiver' : 'Activer'}
+        </Button>
+      </Tooltip>
 
       {/* Supprimer */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setConfirmDelete(true)}
-        disabled={pending}
-        title="Supprimer la promotion"
-        className="h-8 w-8 p-0 text-ink-muted hover:text-accent-pink hover:bg-canvas-soft"
-      >
-        <Trash2 className="h-3.5 w-3.5 text-accent-pink" />
-      </Button>
+      <Tooltip content="Supprimer la promotion">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setConfirmDelete(true)}
+          disabled={pending}
+          className="h-8 w-8 p-0 text-ink-muted hover:text-accent-pink hover:bg-canvas-soft"
+        >
+          <Trash2 className="h-3.5 w-3.5 text-accent-pink" />
+        </Button>
+      </Tooltip>
 
       {/* Modal Changement de Niveau */}
       <Modal open={changeNiveauOpen} onClose={() => setChangeNiveauOpen(false)}>

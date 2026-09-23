@@ -3,6 +3,7 @@
 import { useState, useTransition, useEffect } from 'react'
 import { updateUserRole } from '@/lib/actions/user.actions'
 import { Select } from '@/components/ui/Select'
+import { toast } from '@/components/ui/Toast'
 import { ROLE_LABELS } from '@/lib/constants'
 import type { UserRole } from '@/types/database'
 
@@ -29,7 +30,12 @@ export function RoleSelect({
     setCurrent(next)
     startTransition(async () => {
       const res = await updateUserRole(userId, next)
-      if (res?.error) setCurrent(role)
+      if (res?.error) {
+        setCurrent(role)
+        toast.error(res.error)
+      } else {
+        toast.success(`Rôle mis à jour en "${ROLE_LABELS[next]}"`)
+      }
     })
   }
 

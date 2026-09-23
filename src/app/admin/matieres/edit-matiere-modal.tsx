@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Select } from '@/components/ui/Select'
 import { Alert } from '@/components/ui/Alert'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/Tooltip'
+import { toast } from '@/components/ui/Toast'
 import { Pencil } from 'lucide-react'
 
 interface MatiereItem {
@@ -74,7 +76,9 @@ export function EditMatiereModal({
       const res = await updateMatiere(matiere.id, formData)
       if (res?.error) {
         setError(res.error)
+        toast.error('Erreur', res.error)
       } else {
+        toast.success('Matière mise à jour', `La matière ${name} a été modifiée avec succès.`)
         setOpen(false)
       }
     })
@@ -82,15 +86,19 @@ export function EditMatiereModal({
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleOpen}
-        title="Modifier la matière"
-        className="h-8 w-8 p-0 text-ink-muted hover:text-ink hover:bg-canvas-soft"
-      >
-        <Pencil className="h-3.5 w-3.5" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleOpen}
+            className="h-8 w-8 p-0 text-ink-muted hover:text-ink hover:bg-canvas-soft dark:hover:bg-slate-800"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Modifier la matière</TooltipContent>
+      </Tooltip>
 
       <Modal open={open} onClose={() => setOpen(false)}>
         <ModalTitle>Modifier la matière</ModalTitle>

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Button } from '@/components/ui/Button'
 import { Alert } from '@/components/ui/Alert'
+import { toast } from '@/components/ui/Toast'
 import { Plus } from 'lucide-react'
 
 export function FiliereForm() {
@@ -39,8 +40,10 @@ export function FiliereForm() {
 
     if (res?.error) {
       setError(res.error)
+      toast.error('Erreur', res.error)
     } else {
       setSuccess('Filière créée avec succès !')
+      toast.success('Filière créée', `La filière ${name} a été ajoutée avec succès.`)
       setName('')
       setCode('')
       setDescription('')

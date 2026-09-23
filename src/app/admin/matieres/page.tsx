@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { BookOpen, GraduationCap, Layers } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { NiveauForm } from './niveau-form'
 import { MatiereForm } from './matiere-form'
 import { DeleteButton } from './delete-button'
@@ -7,7 +7,6 @@ import { EditMatiereModal } from './edit-matiere-modal'
 import { ListPageShell } from '@/components/admin/ListPageShell'
 import { formatDate } from '@/lib/utils'
 import { Badge } from '@/components/ui/Badge'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 
 export const metadata = { title: 'Edulink - Matières & Niveaux' }
 
@@ -54,7 +53,9 @@ export default async function MatiereAdminPage() {
     <div className="space-y-6">
       <div>
         <div className="flex items-center gap-2 mb-3">
-          <Layers className="h-4 w-4 text-primary" />
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Icon icon="solar:layers-minimalistic-bold-duotone" height={16} />
+          </div>
           <h3 className="text-body-sm font-semibold text-ink dark:text-slate-100">
             1. Ajouter un niveau
           </h3>
@@ -64,7 +65,9 @@ export default async function MatiereAdminPage() {
 
       <div className="border-t border-hairline dark:border-slate-800 pt-6">
         <div className="flex items-center gap-2 mb-3">
-          <BookOpen className="h-4 w-4 text-accent-teal" />
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400">
+            <Icon icon="solar:book-bookmark-bold-duotone" height={16} />
+          </div>
           <h3 className="text-body-sm font-semibold text-ink dark:text-slate-100">
             2. Ajouter des matières
           </h3>
@@ -84,9 +87,9 @@ export default async function MatiereAdminPage() {
           header: 'Matière',
           accessor: 'name',
           render: (value) => (
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-teal/15 text-accent-teal dark:bg-teal-900/30 dark:text-teal-300">
-                <BookOpen className="h-4 w-4" />
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-teal-500/15 text-teal-600 dark:bg-teal-500/25 dark:text-teal-400">
+                <Icon icon="solar:book-bookmark-bold-duotone" height={22} />
               </div>
               <span className="font-semibold text-ink dark:text-slate-100">{value}</span>
             </div>
@@ -140,7 +143,7 @@ export default async function MatiereAdminPage() {
       emptyState={{
         title: 'Aucune matière',
         description: 'Créez vos niveaux puis ajoutez vos matières avec le formulaire ci-contre.',
-        icon: <BookOpen className="h-8 w-8 text-ink-faint" />,
+        icon: <Icon icon="solar:book-bookmark-bold-duotone" height={32} />,
       }}
       formSlot={rightFormSlot}
       formTitle="Structure académique"

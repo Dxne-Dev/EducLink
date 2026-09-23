@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/Label'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
 import { Alert } from '@/components/ui/Alert'
+import { toast } from '@/components/ui/Toast'
 import { X, Plus, Sparkles, Tag, CheckCircle2 } from 'lucide-react'
 
 interface Filiere {
@@ -166,10 +167,11 @@ export function MatiereForm({
     const res = await createMatiere(formData)
     if (res?.error) {
       setError(res.error)
+      toast.error(res.error)
     } else {
-      setSuccessMsg(
-        `${finalNames.length} matière${finalNames.length > 1 ? 's ont été ajoutées' : ' a été ajoutée'} avec succès !`
-      )
+      const msg = `${finalNames.length} matière${finalNames.length > 1 ? 's ont été ajoutées' : ' a été ajoutée'} avec succès !`
+      setSuccessMsg(msg)
+      toast.success(msg)
       setMatiereTags([])
       setMatiereInput('')
       setCodeTags([])

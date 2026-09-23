@@ -117,7 +117,7 @@ export default async function ProfMesMatieresPage() {
         <Card className="rounded-3xl border border-hairline bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
           <CardContent className="py-12">
             <EmptyState
-              icon={<BookMarked className="h-8 w-8 text-ink-faint" />}
+              icon={<span className="iconify text-4xl text-accent-teal" data-icon="solar:book-bookmark-bold-duotone" />}
               title="Aucune matière assignée"
               description="L'administration universitaire ne vous a pas encore attribué de matières. Veuillez contacter le secrétariat académique."
             />
@@ -133,8 +133,8 @@ export default async function ProfMesMatieresPage() {
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent-purple/15 text-accent-purple-deep dark:bg-purple-900/30 dark:text-purple-300">
-                      <GraduationCap className="h-5 w-5" />
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-purple/15 text-accent-purple-deep dark:bg-purple-900/30 dark:text-purple-300 shadow-sm ring-1 ring-accent-purple/20">
+                      <span className="iconify text-2xl" data-icon="solar:diploma-verified-bold-duotone" />
                     </div>
                     <div>
                       <CardTitle className="text-title text-ink dark:text-slate-100">
@@ -160,8 +160,8 @@ export default async function ProfMesMatieresPage() {
                         className="flex flex-wrap items-center justify-between gap-4 py-4 px-4 sm:px-0 transition-colors hover:bg-canvas-soft/40 sm:hover:bg-transparent dark:hover:bg-slate-800/20"
                       >
                         <div className="flex items-start gap-3">
-                          <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl bg-accent-teal/15 text-accent-teal dark:bg-teal-900/30 dark:text-teal-300">
-                            <BookMarked className="h-4 w-4" />
+                          <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-accent-teal/15 text-accent-teal dark:bg-teal-900/30 dark:text-teal-300 shadow-sm ring-1 ring-accent-teal/20">
+                            <span className="iconify text-xl" data-icon="solar:book-bookmark-bold-duotone" />
                           </div>
                           <div>
                             <p className="font-semibold text-ink dark:text-slate-100 text-body-md">{m.name}</p>
@@ -179,14 +179,14 @@ export default async function ProfMesMatieresPage() {
 
                         <div className="flex items-center gap-2.5">
                           <span className="inline-flex items-center gap-1.5 rounded-xl border border-hairline dark:border-slate-800 bg-canvas-soft dark:bg-slate-800 px-3 py-1.5 text-caption font-medium text-ink-muted dark:text-slate-300">
-                            <FileText className="h-3.5 w-3.5 text-primary" />
+                            <span className="iconify text-sm text-primary" data-icon="solar:document-text-bold-duotone" />
                             {count} document{count > 1 ? 's' : ''}
                           </span>
                           <Link
                             href={`/prof/mes-cours?matiere=${encodeURIComponent(m.code || m.id)}`}
                             className="inline-flex items-center gap-1.5 rounded-xl border border-hairline dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-caption font-semibold text-ink dark:text-slate-200 transition-colors hover:bg-canvas-soft dark:hover:bg-slate-800 shadow-xs"
                           >
-                            <BookOpen className="h-3.5 w-3.5" />
+                            <span className="iconify text-sm text-accent-teal" data-icon="solar:folder-open-bold-duotone" />
                             Voir les cours
                           </Link>
                         </div>

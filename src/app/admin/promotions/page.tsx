@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-import { Building2 } from 'lucide-react'
 import { PromotionForm } from './promotion-form'
 import { PromotionActions } from './promotion-actions'
 import { ListPageShell } from '@/components/admin/ListPageShell'
@@ -39,8 +38,8 @@ export default async function PromotionAdminPage() {
           accessor: 'name',
           render: (value, row: any) => (
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-orange/15 text-accent-orange-deep dark:bg-amber-900/30 dark:text-amber-300">
-                <Building2 className="h-4 w-4" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent-orange/15 text-accent-orange-deep dark:bg-amber-900/30 dark:text-amber-300 shadow-sm ring-1 ring-accent-orange/20">
+                <span className="iconify text-xl" data-icon="solar:buildings-3-bold-duotone" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -91,7 +90,7 @@ export default async function PromotionAdminPage() {
       emptyState={{
         title: 'Aucune promotion',
         description: 'Créez votre première promotion avec le formulaire ci-contre.',
-        icon: <Building2 className="h-8 w-8 text-ink-faint" />,
+        icon: <span className="iconify text-4xl text-accent-orange-deep" data-icon="solar:buildings-3-bold-duotone" />,
       }}
       formSlot={<PromotionForm filieres={filieres} niveaux={niveaux} />}
       formTitle="Ajouter une promotion"
