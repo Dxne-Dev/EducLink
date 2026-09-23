@@ -86,10 +86,10 @@ export function MobileNav({ role }: MobileNavProps) {
                   <MobileNavSection label="Ma filière" />
                   <MobileNavOption href="/etudiant/profs" icon={UserCheck} label="Mes profs" onClick={close} active={pathname === '/etudiant/profs' || pathname === '/dashboard/profs'} />
                   <MobileNavOption href="/etudiant/ressources" icon={BookOpen} label="Mes ressources" onClick={close} active={pathname === '/etudiant/ressources' || pathname === '/dashboard/ressources'} />
-                  
+
                   <MobileNavSection label="Général" />
                   <MobileNavOption href="/etudiant/stages" icon={Briefcase} label="Stages & Gabarits" onClick={close} active={pathname === '/etudiant/stages' || pathname === '/dashboard/stages'} />
-                  <MobileNavOption href="/etudiant/profile" icon={UserCircle} label="Mon Profil" onClick={close} active={pathname === '/etudiant/profile' || pathname === '/dashboard/profile'} />
+                  <MobileNavOption href="/etudiant/profile" icon={UserCircle} label="Mon Profil" onClick={close} active={pathname === '/etudiant/profile'} />
                 </>
               )}
 
@@ -99,7 +99,7 @@ export function MobileNav({ role }: MobileNavProps) {
                   <MobileNavOption href="/prof/mes-cours" icon={Library} label="Ma Bibliothèque" onClick={close} active={pathname.startsWith('/prof/mes-cours') || pathname.startsWith('/dashboard/mes-cours')} />
                   <MobileNavOption href="/prof/cours/upload" icon={Upload} label="Publier un cours" onClick={close} active={pathname === '/prof/cours/upload' || pathname === '/dashboard/cours/upload'} />
                   <MobileNavOption href="/prof/matieres" icon={BookMarked} label="Mes Matières" onClick={close} active={pathname === '/prof/matieres' || pathname === '/dashboard/matieres'} />
-                  <MobileNavOption href="/prof/profile" icon={UserCircle} label="Mon Profil" onClick={close} active={pathname === '/prof/profile' || pathname === '/dashboard/profile'} />
+                  <MobileNavOption href="/prof/profile" icon={UserCircle} label="Mon Profil" onClick={close} active={pathname === '/prof/profile'} />
                 </>
               )}
 
@@ -112,6 +112,7 @@ export function MobileNav({ role }: MobileNavProps) {
                   <MobileNavOption href="/admin/users" icon={Users} label="Utilisateurs" onClick={close} active={pathname === '/admin/users'} />
                   <MobileNavOption href="/admin/teachers" icon={Award} label="Enseignants & Matières" onClick={close} active={pathname.startsWith('/admin/teachers')} />
                   <MobileNavOption href="/admin/rapports" icon={ClipboardList} label="Stages & Gabarits" onClick={close} active={pathname === '/admin/rapports'} />
+                  <MobileNavOption href="/admin/profile" icon={UserCircle} label="Mon Profil" onClick={close} active={pathname === '/admin/profile'} />
                 </>
               )}
             </nav>

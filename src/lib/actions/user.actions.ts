@@ -72,7 +72,10 @@ export async function updateMyProfile(fullName: string) {
 
   if (error) return { error: error.message || 'Erreur lors de la mise à jour du profil' }
 
-  revalidatePath('/dashboard/profile')
+  // Revalider les 3 routes profil réelles
+  revalidatePath('/etudiant/profile')
+  revalidatePath('/prof/profile')
+  revalidatePath('/admin/profile')
   return { success: true }
 }
 
@@ -87,6 +90,10 @@ export async function updateMyPassword(newPassword: string) {
   const { error } = await supabase.auth.updateUser({ password: newPassword })
   if (error) return { error: error.message }
 
+  // Revalider les 3 routes profil réelles
+  revalidatePath('/etudiant/profile')
+  revalidatePath('/prof/profile')
+  revalidatePath('/admin/profile')
   return { success: true }
 }
 

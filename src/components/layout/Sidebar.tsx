@@ -187,7 +187,7 @@ export function Sidebar({ role }: SidebarProps) {
               href="/etudiant/profile"
               icon={UserCircle}
               label="Mon Profil"
-              active={pathname === '/etudiant/profile' || pathname === '/dashboard/profile'}
+              active={pathname === '/etudiant/profile'}
               open={open}
             />
           </>
@@ -222,7 +222,7 @@ export function Sidebar({ role }: SidebarProps) {
               href="/prof/profile"
               icon={UserCircle}
               label="Mon Profil"
-              active={pathname === '/prof/profile' || pathname === '/dashboard/profile'}
+              active={pathname === '/prof/profile'}
               open={open}
             />
           </>
