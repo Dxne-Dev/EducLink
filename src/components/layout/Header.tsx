@@ -1,8 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { logout } from '@/lib/actions/auth.actions'
-import { LogOut, User, Sparkles, Shield, GraduationCap, BookOpen } from 'lucide-react'
+import { LogOut, User, Sparkles, Shield, GraduationCap, BookOpen, Loader2 } from 'lucide-react'
 import { MobileNav } from './MobileNav'
 import { ThemeToggle } from './ThemeToggle'
 import {
@@ -22,6 +25,9 @@ interface HeaderProps {
 }
 
 export function Header({ fullName, role }: HeaderProps) {
+  const router = useRouter()
+  const [loggingOut, setLoggingOut] = useState(false)
+
   const isStudent = role === 'student'
   const isTeacher = role === 'teacher'
   const isAdmin = role === 'admin'
@@ -46,6 +52,23 @@ export function Header({ fullName, role }: HeaderProps) {
         .join('')
         .toUpperCase()
     : '?'
+
+  async function handleLogout() {
+    if (loggingOut) return
+    try {
+      setLoggingOut(true)
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      try {
+        await logout()
+      } catch {
+        // Redirection handled
+      }
+    } finally {
+      router.push('/login')
+      router.refresh()
+    }
+  }
 
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200/80 bg-white/80 px-4 backdrop-blur-md transition-colors dark:border-slate-800 dark:bg-slate-900/80 sm:px-6">
@@ -110,16 +133,20 @@ export function Header({ fullName, role }: HeaderProps) {
 
             <DropdownMenuSeparator className="my-1 bg-slate-100 dark:bg-slate-800" />
 
-            <DropdownMenuItem asChild>
-              <form action={logout} className="w-full">
-                <button
-                  type="submit"
-                  className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/40 cursor-pointer"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Se déconnecter</span>
-                </button>
-              </form>
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault()
+                handleLogout()
+              }}
+              disabled={loggingOut}
+              className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/40 cursor-pointer focus:bg-red-50 focus:text-red-700 dark:focus:bg-red-950/40"
+            >
+              {loggingOut ? (
+                <Loader2 className="h-4 w-4 animate-spin text-red-600" />
+              ) : (
+                <LogOut className="h-4 w-4" />
+              )}
+              <span>{loggingOut ? 'Déconnexion…' : 'Se déconnecter'}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

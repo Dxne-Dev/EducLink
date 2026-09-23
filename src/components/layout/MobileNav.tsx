@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { logout } from '@/lib/actions/auth.actions'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
@@ -20,6 +22,8 @@ import {
   Upload,
   X,
   Menu,
+  LogOut,
+  Loader2,
 } from 'lucide-react'
 
 interface MobileNavProps {
@@ -28,7 +32,9 @@ interface MobileNavProps {
 
 export function MobileNav({ role }: MobileNavProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
 
   const isStudent = role === 'student'
   const isTeacher = role === 'teacher'
@@ -37,6 +43,24 @@ export function MobileNav({ role }: MobileNavProps) {
   const homeHref = isAdmin ? '/admin/dashboard' : isTeacher ? '/prof/dashboard' : '/etudiant/dashboard'
 
   const close = () => setOpen(false)
+
+  async function handleLogout() {
+    if (loggingOut) return
+    try {
+      setLoggingOut(true)
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      try {
+        await logout()
+      } catch {
+        // Redirection handled
+      }
+    } finally {
+      close()
+      router.push('/login')
+      router.refresh()
+    }
+  }
 
   return (
     <>
@@ -116,6 +140,23 @@ export function MobileNav({ role }: MobileNavProps) {
                 </>
               )}
             </nav>
+
+            {/* Bottom Logout in Drawer */}
+            <div className="border-t border-slate-200 p-4 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/40 cursor-pointer"
+              >
+                {loggingOut ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-red-600" />
+                ) : (
+                  <LogOut className="h-4 w-4" />
+                )}
+                <span>{loggingOut ? 'Déconnexion…' : 'Se déconnecter'}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
