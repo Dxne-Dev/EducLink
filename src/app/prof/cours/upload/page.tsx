@@ -11,14 +11,28 @@ import { Button } from '@/components/ui/Button'
 import { Alert } from '@/components/ui/Alert'
 import { RESOURCE_TYPE_LABELS, ALLOWED_RESOURCE_TYPES } from '@/lib/constants'
 import { createResourceMeta } from '@/lib/actions/resources.actions'
-import { UploadCloud, CheckCircle2, FileText } from 'lucide-react'
+import {
+  UploadCloud,
+  CheckCircle2,
+  FileText,
+  GraduationCap,
+  Layers,
+  BookOpen,
+  Building2,
+  Globe,
+  Lock,
+  Calendar,
+  Sparkles,
+  ArrowLeft,
+  X,
+} from 'lucide-react'
+import { PageHeader } from '@/components/layout/PageHeader'
 import type { ResourceVisibility } from '@/types/database'
 
 export default function ProfUploadResourcePage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  // Upload progress (0–100, null = pas encore démarré)
   const [uploadProgress, setUploadProgress] = useState<number | null>(null)
   const [uploadDone, setUploadDone] = useState(false)
 
@@ -34,6 +48,7 @@ export default function ProfUploadResourcePage() {
   const [myMatiereIds, setMyMatiereIds] = useState<string[] | null>(null)
   const [myFiliereIds, setMyFiliereIds] = useState<string[] | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
 
   const supabase = createClient()
 
@@ -63,9 +78,11 @@ export default function ProfUploadResourcePage() {
           .from('matieres')
           .select('niveau_id, niveaux(filiere_id)')
           .in('id', ids)
-        const fIds = [...new Set(
-          matRows?.flatMap((r: any) => r.niveaux ? [r.niveaux.filiere_id] : []).filter(Boolean) ?? []
-        )]
+        const fIds = [
+          ...new Set(
+            matRows?.flatMap((r: any) => (r.niveaux ? [r.niveaux.filiere_id] : [])).filter(Boolean) ?? []
+          ),
+        ]
         setMyFiliereIds(fIds)
       } else {
         setMyMatiereIds([])
@@ -150,8 +167,7 @@ export default function ProfUploadResourcePage() {
     setUploadDone(false)
 
     const form = e.currentTarget
-    const fileInput = form.elements.namedItem('file') as HTMLInputElement
-    const file = fileInput.files?.[0]
+    const file = selectedFile
 
     if (!file) {
       setError('Veuillez sélectionner un fichier')
@@ -178,14 +194,10 @@ export default function ProfUploadResourcePage() {
 
     setUploadProgress(0)
 
-    // Supabase JS v2 ne supporte pas onUploadProgress natif ; on simule via XMLHttpRequest
-    // pour avoir une vraie barre de progression
     const { signedUrl } = await getUploadSignedUrl(user.id, filePath, file.type)
-
     let finalFilePath = filePath
 
     if (signedUrl) {
-      // Upload via XHR pour avoir la progression
       const uploaded = await uploadWithProgress(signedUrl, file, (pct) => {
         setUploadProgress(pct)
       })
@@ -196,7 +208,6 @@ export default function ProfUploadResourcePage() {
         return
       }
     } else {
-      // Fallback : upload SDK (sans progression)
       const { error: uploadError } = await supabase.storage
         .from('resources')
         .upload(filePath, file)
@@ -213,7 +224,7 @@ export default function ProfUploadResourcePage() {
     setUploadDone(true)
 
     // ── Étape 2 : enregistrement des métadonnées en base (server action) ──
-    const visibility = (form.elements.namedItem('visibility') as HTMLSelectElement)?.value as ResourceVisibility ?? 'private'
+    const visibility = ((form.elements.namedItem('visibility') as HTMLSelectElement)?.value as ResourceVisibility) ?? 'private'
     const title = (form.elements.namedItem('title') as HTMLInputElement)?.value ?? ''
     const description = (form.elements.namedItem('description') as HTMLTextAreaElement)?.value ?? ''
     const type = (form.elements.namedItem('type') as HTMLSelectElement)?.value as any
@@ -242,120 +253,93 @@ export default function ProfUploadResourcePage() {
     router.refresh()
   }
 
+  const breadcrumb = [
+    { label: 'Espace Enseignant', href: '/prof/mes-cours' },
+    { label: 'Ma Bibliothèque', href: '/prof/mes-cours' },
+    { label: 'Publier un cours' },
+  ]
+
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-heading-2 text-ink">Publier un document</h1>
-        <p className="mt-1 text-body-sm text-ink-muted">
-          Déposez un cours, TP, TD, examen ou fiche pour vos matières et promotions assignées.
-        </p>
-      </div>
+    <div className="mx-auto max-w-4xl space-y-6 pb-12">
+      <PageHeader
+        breadcrumb={breadcrumb}
+        title="Publier un document pédagogique"
+        subtitle="Déposez un cours, TP, TD, examen ou fiche pour vos étudiants et promotions assignées."
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-heading-3">Nouveau document</CardTitle>
-          <CardDescription>Les champs marqués * sont obligatoires.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {error && (
-            <div className="mb-4">
-              <Alert variant="danger">{error}</Alert>
-            </div>
-          )}
+      {error && <Alert variant="danger">{error}</Alert>}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="title">Titre *</Label>
-              <Input id="title" name="title" required placeholder="Ex: Algorithmique avancée et graphes" />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="description">Description</Label>
-              <textarea
-                id="description"
-                name="description"
-                rows={3}
-                className="block w-full rounded-sm border border-[rgb(221,221,221)] bg-white px-3 py-1.5 text-body-sm text-ink transition-all placeholder:text-ink-faint focus:border-primary focus:outline-none focus:shadow-level-1"
-                placeholder="Objectifs pédagogiques, prérequis ou résumé du cours..."
-              />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="type">Type de ressource *</Label>
-                <Select id="type" name="type" required defaultValue="cours">
-                  {Object.entries(RESOURCE_TYPE_LABELS).map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-                </Select>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Section 1 : Cursus & Destination Académique */}
+        <Card className="rounded-3xl border border-hairline bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-purple/15 text-accent-purple-deep dark:bg-purple-900/30 dark:text-purple-300">
+                <GraduationCap className="h-5 w-5" />
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="visibility">Visibilité *</Label>
-                <Select id="visibility" name="visibility" required defaultValue="private">
-                  <option value="private">Privée (visible uniquement par vous)</option>
-                  <option value="public">Publique (accessible aux étudiants de la promo)</option>
-                </Select>
+              <div>
+                <CardTitle className="text-title text-ink dark:text-slate-100">
+                  1. Destination Académique
+                </CardTitle>
+                <CardDescription className="text-caption text-ink-muted dark:text-slate-400">
+                  Sélectionnez la filière, le niveau et la promotion ciblée par ce document.
+                </CardDescription>
               </div>
             </div>
-
-            {/* Année scolaire */}
-            <div className="space-y-1.5">
-              <Label htmlFor="annee_scolaire">Année scolaire</Label>
-              <Input
-                id="annee_scolaire"
-                name="annee_scolaire"
-                placeholder="Ex: 2024-2025"
-                pattern="[0-9]{4}-[0-9]{4}"
-                title="Format attendu : 2024-2025"
-              />
-            </div>
-
-            {/* Cursus : Filière & Niveau */}
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
+              <div>
                 <Label htmlFor="filiere_select">Filière *</Label>
                 <Select
                   id="filiere_select"
                   value={selectedFiliere}
                   onChange={(e) => setSelectedFiliere(e.target.value)}
                   required
+                  className="mt-1"
                 >
                   <option value="" disabled>
                     {loadingData ? 'Chargement des filières...' : 'Sélectionner une filière'}
                   </option>
-                  {filieres.filter(f => !myFiliereIds || myFiliereIds.includes(f.id)).map((f) => (
-                    <option key={f.id} value={f.id}>{f.name} ({f.code})</option>
-                  ))}
+                  {filieres
+                    .filter((f) => !myFiliereIds || myFiliereIds.includes(f.id))
+                    .map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {f.name} ({f.code})
+                      </option>
+                    ))}
                 </Select>
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="niveau_select">Niveau (L1, L2, L3, M1...) *</Label>
+              <div>
+                <Label htmlFor="niveau_select">Niveau d'études *</Label>
                 <Select
                   id="niveau_select"
                   value={selectedNiveau}
                   onChange={(e) => setSelectedNiveau(e.target.value)}
                   disabled={!selectedFiliere}
                   required
+                  className="mt-1"
                 >
                   <option value="" disabled>
                     {!selectedFiliere
                       ? "Choisissez d'abord une filière"
                       : niveaux.length === 0
-                      ? 'Aucun niveau disponible'
+                      ? 'Aucun niveau configuré'
                       : 'Sélectionner le niveau'}
                   </option>
                   {niveaux.map((n) => (
-                    <option key={n.id} value={n.id}>{n.name}</option>
+                    <option key={n.id} value={n.id}>
+                      {n.name}
+                    </option>
                   ))}
                 </Select>
               </div>
             </div>
 
-            {/* Matière & Promotion */}
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="matiere_id">Matière *</Label>
+              <div>
+                <Label htmlFor="matiere_id">Matière / Module *</Label>
                 <Select
                   id="matiere_id"
                   name="matiere_id"
@@ -363,22 +347,25 @@ export default function ProfUploadResourcePage() {
                   onChange={(e) => setSelectedMatiere(e.target.value)}
                   disabled={!selectedNiveau}
                   required
+                  className="mt-1"
                 >
                   <option value="" disabled hidden>
                     {!selectedNiveau
                       ? "Choisissez d'abord un niveau"
                       : matieres.length === 0
-                      ? 'Aucune matière configurée'
+                      ? 'Aucune matière assignée'
                       : 'Sélectionner la matière'}
                   </option>
                   {matieres.map((m) => (
-                    <option key={m.id} value={m.id}>{m.name}</option>
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
                   ))}
                 </Select>
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="promo_id">Promotion cible *</Label>
+              <div>
+                <Label htmlFor="promo_id">Promotion principale *</Label>
                 <Select
                   id="promo_id"
                   name="promo_id"
@@ -386,109 +373,250 @@ export default function ProfUploadResourcePage() {
                   onChange={(e) => setSelectedPromo(e.target.value)}
                   disabled={!selectedFiliere}
                   required
+                  className="mt-1"
                 >
                   <option value="" disabled hidden>
                     {!selectedFiliere
                       ? "Choisissez d'abord une filière"
                       : promotions.length === 0
-                      ? 'Aucune promotion pour cette filière'
+                      ? 'Aucune promotion trouvée'
                       : 'Sélectionner la promotion'}
                   </option>
                   {promotions.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
                   ))}
                 </Select>
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Sélection du fichier */}
-            <div className="space-y-1.5">
-              <Label htmlFor="file">Fichier *</Label>
-              <label
-                htmlFor="file"
-                className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
-                  selectedFile
-                    ? 'border-primary/40 bg-primary/5'
-                    : 'border-hairline bg-canvas-soft hover:border-primary/30 hover:bg-primary/5'
-                }`}
-              >
-                {selectedFile ? (
-                  <>
-                    <FileText className="h-8 w-8 text-primary" />
-                    <div>
-                      <p className="font-medium text-ink text-body-sm">{selectedFile.name}</p>
-                      <p className="text-caption text-ink-muted">
-                        {(selectedFile.size / 1024 / 1024).toFixed(2)} Mo
-                      </p>
-                    </div>
-                    <span className="text-caption font-medium text-primary">Changer de fichier</span>
-                  </>
-                ) : (
-                  <>
-                    <UploadCloud className="h-8 w-8 text-ink-faint" />
-                    <div>
-                      <p className="font-medium text-ink-secondary text-body-sm">
-                        Cliquez pour sélectionner un fichier
-                      </p>
-                      <p className="text-caption text-ink-faint">PDF, DOCX, PPTX ou ZIP</p>
-                    </div>
-                  </>
-                )}
-                <input
-                  id="file"
-                  name="file"
-                  type="file"
-                  required
-                  accept=".pdf,.docx,.pptx,.zip"
-                  className="sr-only"
-                  onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
-                />
-              </label>
+        {/* Section 2 : Métadonnées du document */}
+        <Card className="rounded-3xl border border-hairline bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-teal/15 text-accent-teal dark:bg-teal-900/30 dark:text-teal-300">
+                <FileText className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle className="text-title text-ink dark:text-slate-100">
+                  2. Informations sur le Document
+                </CardTitle>
+                <CardDescription className="text-caption text-ink-muted dark:text-slate-400">
+                  Titre, résumé pédagogique et options de visibilité.
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="title">Titre du document *</Label>
+              <Input
+                id="title"
+                name="title"
+                required
+                placeholder="Ex: Cours 3 — Structure des données arborescentes"
+                className="mt-1"
+              />
             </div>
 
-            {/* Barre de progression de l'upload */}
-            {uploadProgress !== null && (
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-caption text-ink-muted">
-                  <span>
-                    {uploadDone
-                      ? 'Fichier envoyé — enregistrement en cours…'
-                      : `Upload en cours… ${uploadProgress}%`}
-                  </span>
-                  {uploadDone && <CheckCircle2 className="h-4 w-4 text-success" />}
+            <div>
+              <Label htmlFor="description">Description & Objectifs pédagogiques</Label>
+              <textarea
+                id="description"
+                name="description"
+                rows={3}
+                className="mt-1 block w-full rounded-xl border border-hairline bg-white px-3 py-2 text-body-sm text-ink shadow-2xs placeholder:text-ink-faint focus:border-primary focus:outline-hidden focus:ring-1 focus:ring-primary dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                placeholder="Prérequis, notions abordées ou consignes associées..."
+              />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div>
+                <Label htmlFor="type">Nature du document *</Label>
+                <Select id="type" name="type" required defaultValue="cours" className="mt-1">
+                  {Object.entries(RESOURCE_TYPE_LABELS).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="visibility">Visibilité d'accès *</Label>
+                <Select id="visibility" name="visibility" required defaultValue="public" className="mt-1">
+                  <option value="public">Publique (étudiants de la promo)</option>
+                  <option value="private">Privée (brouillon personnel)</option>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="annee_scolaire">Année scolaire</Label>
+                <Input
+                  id="annee_scolaire"
+                  name="annee_scolaire"
+                  placeholder="Ex: 2025-2026"
+                  pattern="[0-9]{4}-[0-9]{4}"
+                  title="Format attendu : 2025-2026"
+                  className="mt-1"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Section 3 : Fichier et Dépose */}
+        <Card className="rounded-3xl border border-hairline bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-orange/15 text-accent-orange-deep dark:bg-amber-900/30 dark:text-amber-300">
+                <UploadCloud className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle className="text-title text-ink dark:text-slate-100">
+                  3. Fichier du Cours
+                </CardTitle>
+                <CardDescription className="text-caption text-ink-muted dark:text-slate-400">
+                  Formats acceptés : PDF, DOCX, PPTX, ZIP (jusqu'à 50 Mo).
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div
+              onDragOver={(e) => {
+                e.preventDefault()
+                setIsDragging(true)
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={(e) => {
+                e.preventDefault()
+                setIsDragging(false)
+                if (e.dataTransfer.files?.[0]) {
+                  setSelectedFile(e.dataTransfer.files[0])
+                }
+              }}
+              className={`relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-8 text-center transition-all ${
+                isDragging
+                  ? 'border-primary bg-primary/10 scale-[1.01]'
+                  : selectedFile
+                  ? 'border-accent-teal/60 bg-accent-teal/5 dark:bg-teal-950/20'
+                  : 'border-hairline bg-canvas-soft/60 hover:border-primary/40 hover:bg-primary/5 dark:bg-slate-800/30 dark:border-slate-700'
+              }`}
+            >
+              {selectedFile ? (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-teal/20 text-accent-teal">
+                    <FileText className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-ink dark:text-slate-100 text-body-sm">
+                      {selectedFile.name}
+                    </p>
+                    <p className="text-caption text-ink-muted dark:text-slate-400 mt-0.5">
+                      {(selectedFile.size / (1024 * 1024)).toFixed(2)} Mo · {selectedFile.type || 'Fichier'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setSelectedFile(null)
+                    }}
+                    className="mt-2 inline-flex items-center gap-1 text-caption text-accent-pink hover:underline"
+                  >
+                    <X className="h-3.5 w-3.5" /> Retirer le fichier
+                  </button>
                 </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-canvas-soft">
+              ) : (
+                <>
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary dark:bg-primary/20">
+                    <UploadCloud className="h-7 w-7" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-ink dark:text-slate-100 text-body-sm">
+                      Glissez-déposez votre fichier ici, ou cliquez pour parcourir
+                    </p>
+                    <p className="text-caption text-ink-muted dark:text-slate-400 mt-1">
+                      PDF, DOCX, PPTX ou ZIP (50 Mo max)
+                    </p>
+                  </div>
+                </>
+              )}
+
+              <input
+                id="file"
+                name="file"
+                type="file"
+                accept=".pdf,.docx,.pptx,.zip"
+                className="sr-only"
+                onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
+              />
+            </div>
+
+            {/* Barre de progression avec animation */}
+            {uploadProgress !== null && (
+              <div className="space-y-2 rounded-2xl border border-hairline bg-canvas-soft/70 dark:bg-slate-800/40 p-4">
+                <div className="flex items-center justify-between text-body-sm font-medium text-ink dark:text-slate-200">
+                  <span className="flex items-center gap-2">
+                    {uploadDone ? (
+                      <>
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        <span>Fichier transféré — finalisation de l'enregistrement...</span>
+                      </>
+                    ) : (
+                      <>
+                        <UploadCloud className="h-4 w-4 text-primary animate-pulse" />
+                        <span>Téléversement en cours... {uploadProgress}%</span>
+                      </>
+                    )}
+                  </span>
+                  <span className="font-mono text-caption text-ink-muted">{uploadProgress}%</span>
+                </div>
+                <div className="h-2.5 w-full overflow-hidden rounded-full bg-canvas-soft dark:bg-slate-700">
                   <div
-                    className="h-full rounded-full bg-primary transition-all duration-300"
+                    className="h-full rounded-full bg-gradient-to-r from-primary to-accent-teal transition-all duration-300"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
               </div>
             )}
+          </CardContent>
+        </Card>
 
-            <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="secondary" onClick={() => router.back()}>Annuler</Button>
-              <Button type="submit" loading={loading}>
-                {loading
-                  ? uploadProgress !== null && uploadProgress < 100
-                    ? `Upload ${uploadProgress}%`
-                    : 'Enregistrement…'
-                  : 'Publier la ressource'}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+        {/* Boutons d'action */}
+        <div className="flex items-center justify-end gap-3 pt-2">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => router.back()}
+            disabled={loading}
+          >
+            Annuler
+          </Button>
+          <Button
+            type="submit"
+            disabled={loading || !selectedFile || !selectedMatiere || !selectedPromo}
+            className="flex items-center gap-2"
+          >
+            <Sparkles className="h-4 w-4" />
+            {loading
+              ? uploadProgress !== null && uploadProgress < 100
+                ? `Envoi ${uploadProgress}%...`
+                : 'Enregistrement...'
+              : 'Publier le document'}
+          </Button>
+        </div>
+      </form>
     </div>
   )
 }
 
 /* ─── Helpers upload direct ──────────────────────────────────────────────── */
 
-/**
- * Génère une URL signée pour un upload direct navigateur → Supabase Storage.
- * Utilise le client SDK browser (session RLS active) plutôt qu'un XHR public.
- */
 async function getUploadSignedUrl(
   userId: string,
   filePath: string,
@@ -505,10 +633,6 @@ async function getUploadSignedUrl(
   return { signedUrl: data.signedUrl }
 }
 
-/**
- * Upload via XHR pour suivre la progression (onprogress).
- * Renvoie { ok: true } ou { ok: false, error: string }.
- */
 function uploadWithProgress(
   signedUrl: string,
   file: File,

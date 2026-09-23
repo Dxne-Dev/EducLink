@@ -2,13 +2,13 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { ArrowLeft, Share2, Globe, Lock, FileText } from 'lucide-react'
+import { ArrowLeft, Share2, Globe, Lock, FileText, BookOpen, GraduationCap, Building2 } from 'lucide-react'
 import { RESOURCE_TYPE_LABELS } from '@/lib/constants'
 import { RealtimeResourcesWatcher } from '@/components/realtime/RealtimeResourcesWatcher'
 import { ShareForm } from './share-form'
 import { RevokeButton } from './revoke-button'
+import { PageHeader } from '@/components/layout/PageHeader'
 
 export const metadata = { title: 'Edulink — Gérer les partages' }
 
@@ -80,88 +80,102 @@ export default async function ProfPartagePage({
   const niveau = matiere?.niveaux
   const filiere = niveau?.filieres
 
-  return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <RealtimeResourcesWatcher />
-      {/* Retour */}
-      <div>
-        <Link
-          href="/prof/mes-cours"
-          className="inline-flex items-center gap-1.5 text-body-sm text-ink-muted hover:text-ink transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Retour à ma bibliothèque
-        </Link>
-      </div>
+  const breadcrumb = [
+    { label: 'Espace Enseignant', href: '/prof/mes-cours' },
+    { label: 'Ma Bibliothèque', href: '/prof/mes-cours' },
+    { label: 'Gérer les partages' },
+  ]
 
-      {/* Résumé de la ressource */}
-      <Card>
-        <CardContent className="p-6">
+  return (
+    <div className="mx-auto max-w-4xl space-y-6 pb-12">
+      <RealtimeResourcesWatcher />
+
+      <PageHeader
+        breadcrumb={breadcrumb}
+        title="Partage Inter-Promotions"
+        subtitle="Autorisez d'autres cohortes d'étudiants à accéder à ce document pédagogique sans duplication de stockage."
+      />
+
+      {/* Résumé de la ressource (Hero Card) */}
+      <Card className="rounded-3xl border border-hairline bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
+        <CardContent className="p-6 space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="space-y-1">
-              <span className="rounded bg-accent-purple/15 px-2 py-0.5 text-caption font-bold uppercase tracking-wider text-accent-purple-deep">
+            <div className="space-y-1.5 max-w-xl">
+              <span className="inline-flex rounded-lg bg-accent-purple/15 px-2.5 py-1 text-caption font-bold uppercase tracking-wider text-accent-purple-deep dark:bg-purple-900/30 dark:text-purple-300">
                 {RESOURCE_TYPE_LABELS[resource.type as keyof typeof RESOURCE_TYPE_LABELS] ?? resource.type}
               </span>
-              <h1 className="text-heading-2 text-ink mt-1">{resource.title}</h1>
+              <h2 className="text-heading-3 text-ink dark:text-slate-100 font-bold">{resource.title}</h2>
               {resource.description && (
-                <p className="text-body-sm text-ink-muted">{resource.description}</p>
+                <p className="text-body-sm text-ink-muted dark:text-slate-400">{resource.description}</p>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant={resource.visibility === 'public' ? 'success' : 'secondary'}>
-                {resource.visibility === 'public' ? (
-                  <>
-                    <Globe className="mr-1 h-3 w-3" /> Public
-                  </>
-                ) : (
-                  <>
-                    <Lock className="mr-1 h-3 w-3" /> Privé
-                  </>
-                )}
-              </Badge>
-            </div>
+
+            <Badge variant={resource.visibility === 'public' ? 'success' : 'secondary'} className="px-3 py-1">
+              {resource.visibility === 'public' ? (
+                <>
+                  <Globe className="mr-1.5 h-3.5 w-3.5" /> Public
+                </>
+              ) : (
+                <>
+                  <Lock className="mr-1.5 h-3.5 w-3.5" /> Privé
+                </>
+              )}
+            </Badge>
           </div>
 
-          <div className="mt-4 grid gap-3 rounded-lg border border-hairline bg-canvas-soft p-3 sm:grid-cols-3 text-caption">
-            <div>
-              <span className="text-ink-faint">Matière :</span>
-              <p className="font-semibold text-ink">{matiere?.name ?? '—'}</p>
+          <div className="grid gap-3 rounded-2xl border border-hairline bg-canvas-soft/80 dark:bg-slate-800/50 p-4 sm:grid-cols-3 text-caption">
+            <div className="flex items-start gap-2">
+              <BookOpen className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <div>
+                <span className="text-ink-faint dark:text-slate-400">Matière :</span>
+                <p className="font-semibold text-ink dark:text-slate-100">{matiere?.name ?? '—'}</p>
+              </div>
             </div>
-            <div>
-              <span className="text-ink-faint">Filière & Niveau :</span>
-              <p className="font-semibold text-ink">
-                {filiere?.name} · {niveau?.name}
-              </p>
+
+            <div className="flex items-start gap-2">
+              <GraduationCap className="h-4 w-4 text-accent-teal shrink-0 mt-0.5" />
+              <div>
+                <span className="text-ink-faint dark:text-slate-400">Filière & Niveau :</span>
+                <p className="font-semibold text-ink dark:text-slate-100">
+                  {filiere?.name} · {niveau?.name}
+                </p>
+              </div>
             </div>
-            <div>
-              <span className="text-ink-faint">Promotion d'origine :</span>
-              <p className="font-semibold text-ink">{resource.promotions?.name ?? '—'}</p>
+
+            <div className="flex items-start gap-2">
+              <Building2 className="h-4 w-4 text-accent-orange-deep shrink-0 mt-0.5" />
+              <div>
+                <span className="text-ink-faint dark:text-slate-400">Promotion d'origine :</span>
+                <p className="font-semibold text-ink dark:text-slate-100">{resource.promotions?.name ?? '—'}</p>
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Partages actuels */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-title">Classes & Promotions ayant accès</CardTitle>
-          <CardDescription>
-            Ce document physique est partagé avec les promotions ci-dessous sans duplication de stockage.
+      <Card className="rounded-3xl border border-hairline bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-title text-ink dark:text-slate-100">
+            Promotions & Cohortes ayant accès
+          </CardTitle>
+          <CardDescription className="text-caption text-ink-muted dark:text-slate-400">
+            Ce document physique est partagé avec les promotions ci-dessous en lecture directe.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="divide-y divide-hairline">
+          <div className="divide-y divide-hairline dark:divide-slate-800">
             {/* Promotion d'origine */}
-            <div className="flex items-center justify-between py-3">
+            <div className="flex items-center justify-between py-3.5">
               <div>
-                <p className="font-medium text-ink text-body-sm">
+                <p className="font-semibold text-ink dark:text-slate-100 text-body-sm">
                   {resource.promotions?.name ?? 'Promotion principale'}
                 </p>
-                <p className="text-caption text-ink-muted">
-                  Promotion d'origine · Visibilité globale du document : {resource.visibility}
+                <p className="text-caption text-ink-muted dark:text-slate-400 mt-0.5">
+                  Promotion d'origine · Visibilité globale : {resource.visibility === 'public' ? 'Public' : 'Privé'}
                 </p>
               </div>
-              <Badge variant="purple">Origine</Badge>
+              <Badge variant="purple" className="px-2.5 py-1 font-semibold">Origine</Badge>
             </div>
 
             {/* Promotions supplémentaires */}
@@ -171,14 +185,14 @@ export default async function ProfPartagePage({
               const pFiliere = pNiveau?.filieres
 
               return (
-                <div key={share.id} className="flex items-center justify-between py-3">
+                <div key={share.id} className="flex items-center justify-between py-3.5">
                   <div>
-                    <p className="font-medium text-ink text-body-sm">{promo?.name}</p>
-                    <p className="text-caption text-ink-muted">
+                    <p className="font-semibold text-ink dark:text-slate-100 text-body-sm">{promo?.name}</p>
+                    <p className="text-caption text-ink-muted dark:text-slate-400 mt-0.5">
                       {pFiliere?.name} · {pNiveau?.name}
                       {promo?.year_start && ` (${promo.year_start}–${promo.year_end})`}
                       {' · '}
-                      <span className={share.visibility === 'public' ? 'text-emerald-600 font-medium' : 'text-amber-600 font-medium'}>
+                      <span className={share.visibility === 'public' ? 'text-emerald-600 font-semibold' : 'text-amber-600 font-semibold'}>
                         {share.visibility === 'public' ? 'Public' : 'Privé'}
                       </span>
                     </p>
@@ -192,13 +206,17 @@ export default async function ProfPartagePage({
       </Card>
 
       {/* Formulaire d'ajout de partage */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Share2 className="h-5 w-5 text-primary" />
+      <Card className="rounded-3xl border border-hairline bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary dark:bg-primary/25">
+              <Share2 className="h-5 w-5" />
+            </div>
             <div>
-              <CardTitle className="text-title">Partager avec une autre promotion</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-title text-ink dark:text-slate-100">
+                Partager avec une autre promotion
+              </CardTitle>
+              <CardDescription className="text-caption text-ink-muted dark:text-slate-400">
                 Permet aux étudiants d'une autre classe de réviser avec ce cours. Zéro octet supplémentaire consommé.
               </CardDescription>
             </div>
@@ -206,7 +224,7 @@ export default async function ProfPartagePage({
         </CardHeader>
         <CardContent>
           {availablePromos.length === 0 ? (
-            <p className="text-body-sm text-ink-muted py-2">
+            <p className="text-body-sm text-ink-muted dark:text-slate-400 py-2">
               Toutes les promotions existantes ont déjà accès à cette ressource.
             </p>
           ) : (

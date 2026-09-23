@@ -3,7 +3,9 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { BookMarked, GraduationCap, BookOpen, FileText } from 'lucide-react'
+import { BookMarked, GraduationCap, BookOpen, FileText, Plus, Info } from 'lucide-react'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { Badge } from '@/components/ui/Badge'
 
 export const metadata = { title: 'Edulink — Mes Matières (Enseignant)' }
 
@@ -87,72 +89,105 @@ export default async function ProfMesMatieresPage() {
     byFiliere.get(filiere.id)!.matieres.push(m)
   }
 
+  const breadcrumb = [
+    { label: 'Espace Enseignant', href: '/prof/mes-cours' },
+    { label: 'Mes Matières' },
+  ]
+
+  const headerAction = (
+    <Link
+      href="/prof/cours/upload"
+      className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-body-sm font-semibold text-white shadow-xs transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98]"
+    >
+      <Plus className="h-4 w-4" />
+      <span>Publier un cours</span>
+    </Link>
+  )
+
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div>
-        <h1 className="text-heading-2 text-ink">Mes Matières</h1>
-        <p className="mt-1 text-body-sm text-ink-muted">
-          Matières qui vous ont été attribuées par l'administration. Lecture seule.
-        </p>
-      </div>
+    <div className="mx-auto max-w-5xl space-y-6 pb-12">
+      <PageHeader
+        breadcrumb={breadcrumb}
+        title="Mes Matières Enseignées"
+        subtitle="Consultez les modules et matières officiellement affectés à votre compte enseignant."
+        actions={headerAction}
+      />
 
       {matieres.length === 0 ? (
-        <Card>
-          <CardContent>
+        <Card className="rounded-3xl border border-hairline bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+          <CardContent className="py-12">
             <EmptyState
+              icon={<BookMarked className="h-8 w-8 text-ink-faint" />}
               title="Aucune matière assignée"
-              description="L'administrateur ne vous a pas encore attribué de matières. Contactez-le pour être configuré."
+              description="L'administration universitaire ne vous a pas encore attribué de matières. Veuillez contacter le secrétariat académique."
             />
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-6">
           {Array.from(byFiliere.values()).map(({ filiere, matieres: fMatieres }) => (
-            <Card key={filiere.id}>
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <GraduationCap className="h-5 w-5" />
-                  </span>
-                  <div>
-                    <CardTitle className="text-heading-3">{filiere.name}</CardTitle>
-                    <CardDescription>Code filière : {filiere.code}</CardDescription>
+            <Card
+              key={filiere.id}
+              className="rounded-3xl border border-hairline bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900"
+            >
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent-purple/15 text-accent-purple-deep dark:bg-purple-900/30 dark:text-purple-300">
+                      <GraduationCap className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-title text-ink dark:text-slate-100">
+                        {filiere.name}
+                      </CardTitle>
+                      <CardDescription className="text-caption text-ink-muted dark:text-slate-400 mt-0.5">
+                        Code filière : <span className="font-mono font-semibold">{filiere.code}</span>
+                      </CardDescription>
+                    </div>
                   </div>
+                  <Badge variant="purple" className="px-2.5 py-1">
+                    {fMatieres.length} matière{fMatieres.length > 1 ? 's' : ''}
+                  </Badge>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="divide-y divide-hairline">
+              <CardContent className="p-0 sm:p-6 sm:pt-0">
+                <div className="divide-y divide-hairline dark:divide-slate-800">
                   {fMatieres.map((m) => {
                     const count = resourceCounts[m.id] ?? 0
                     return (
                       <div
                         key={m.id}
-                        className="flex flex-wrap items-center justify-between gap-4 py-4"
+                        className="flex flex-wrap items-center justify-between gap-4 py-4 px-4 sm:px-0 transition-colors hover:bg-canvas-soft/40 sm:hover:bg-transparent dark:hover:bg-slate-800/20"
                       >
                         <div className="flex items-start gap-3">
-                          <span className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-md bg-accent-teal/15 text-accent-teal">
+                          <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl bg-accent-teal/15 text-accent-teal dark:bg-teal-900/30 dark:text-teal-300">
                             <BookMarked className="h-4 w-4" />
-                          </span>
+                          </div>
                           <div>
-                            <p className="font-semibold text-ink text-body-md">{m.name}</p>
-                            <p className="text-caption text-ink-muted">
-                              Code : <span className="font-mono">{m.code}</span>
-                              {' · '}
-                              Niveau : {m.niveaux?.name}
-                            </p>
+                            <p className="font-semibold text-ink dark:text-slate-100 text-body-md">{m.name}</p>
+                            <div className="flex items-center gap-2 mt-0.5 text-caption text-ink-muted dark:text-slate-400">
+                              {m.code && (
+                                <span className="font-mono font-semibold text-primary dark:text-sky-400">
+                                  {m.code}
+                                </span>
+                              )}
+                              <span>•</span>
+                              <span>Niveau : <strong className="text-ink-secondary dark:text-slate-300">{m.niveaux?.name}</strong></span>
+                            </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <span className="inline-flex items-center gap-1.5 rounded-full border border-hairline bg-canvas-soft px-3 py-1 text-caption text-ink-muted">
-                            <FileText className="h-3.5 w-3.5" />
-                            {count} ressource{count !== 1 ? 's' : ''}
+
+                        <div className="flex items-center gap-2.5">
+                          <span className="inline-flex items-center gap-1.5 rounded-xl border border-hairline dark:border-slate-800 bg-canvas-soft dark:bg-slate-800 px-3 py-1.5 text-caption font-medium text-ink-muted dark:text-slate-300">
+                            <FileText className="h-3.5 w-3.5 text-primary" />
+                            {count} document{count > 1 ? 's' : ''}
                           </span>
                           <Link
                             href={`/prof/mes-cours?matiere=${encodeURIComponent(m.code || m.id)}`}
-                            className="inline-flex items-center gap-1.5 rounded-md border border-hairline bg-white px-3 py-1.5 text-caption font-medium text-ink transition-colors hover:bg-canvas-soft"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-hairline dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-caption font-semibold text-ink dark:text-slate-200 transition-colors hover:bg-canvas-soft dark:hover:bg-slate-800 shadow-xs"
                           >
                             <BookOpen className="h-3.5 w-3.5" />
-                            Voir mes docs
+                            Voir les cours
                           </Link>
                         </div>
                       </div>
@@ -165,8 +200,11 @@ export default async function ProfMesMatieresPage() {
         </div>
       )}
 
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-body-sm text-amber-800">
-        <strong>Note :</strong> Pour modifier vos affectations de matières, contactez l'administrateur de la plateforme.
+      <div className="flex items-start gap-3 rounded-2xl border border-amber-200/80 bg-amber-50/70 p-4 text-body-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200 shadow-xs">
+        <Info className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+        <p className="text-caption leading-relaxed">
+          <strong>Information académique :</strong> Les affectations de matières sont gérées par la direction des études. Si un module est manquant ou si vous changez d'attribution pour ce semestre, contactez l'administrateur.
+        </p>
       </div>
     </div>
   )

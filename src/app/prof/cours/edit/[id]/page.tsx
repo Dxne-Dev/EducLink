@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import { EditResourceForm } from './edit-form'
+import { PageHeader } from '@/components/layout/PageHeader'
 
 export const metadata = { title: 'Edulink — Modifier la ressource (Enseignant)' }
 
@@ -60,14 +61,19 @@ export default async function ProfEditResourcePage({
     .select('id, name, code')
     .order('name')
 
+  const breadcrumb = [
+    { label: 'Espace Enseignant', href: '/prof/mes-cours' },
+    { label: 'Ma Bibliothèque', href: '/prof/mes-cours' },
+    { label: 'Modifier le document' },
+  ]
+
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-heading-2 text-ink">Modifier le document</h1>
-        <p className="mt-1 text-body-sm text-ink-muted">
-          Modifiez le cursus (filière, niveau, matière), les métadonnées ou remplacez le fichier existant.
-        </p>
-      </div>
+    <div className="mx-auto max-w-3xl space-y-6 pb-12">
+      <PageHeader
+        breadcrumb={breadcrumb}
+        title="Modifier le document"
+        subtitle="Mettez à jour le cursus académique, les métadonnées ou remplacez le fichier existant."
+      />
 
       <EditResourceForm
         resource={resource}

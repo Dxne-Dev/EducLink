@@ -13,7 +13,7 @@ import { RESOURCE_TYPE_LABELS, ALLOWED_RESOURCE_TYPES } from '@/lib/constants'
 import { updateResource } from '@/lib/actions/resources.actions'
 import { emitRealtimeRefresh } from '@/lib/realtime-broadcast'
 import { formatFileSize } from '@/lib/utils'
-import { FileText } from 'lucide-react'
+import { FileText, Save, ArrowLeft } from 'lucide-react'
 
 interface EditResourceFormProps {
   resource: any
@@ -129,10 +129,12 @@ export function EditResourceForm({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-heading-3">Détails du document</CardTitle>
-        <CardDescription>Tous les champs sont rééditables. Laissez le fichier vide pour conserver l'actuel.</CardDescription>
+    <Card className="rounded-3xl border border-hairline bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-title text-ink dark:text-slate-100">Détails du document</CardTitle>
+        <CardDescription className="text-caption text-ink-muted dark:text-slate-400">
+          Tous les champs sont rééditables. Laissez le fichier vide pour conserver l'actuel.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {error && (
@@ -142,18 +144,19 @@ export function EditResourceForm({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="title">Titre *</Label>
+          <div>
+            <Label htmlFor="title">Titre du document *</Label>
             <Input
               id="title"
               name="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
+              className="mt-1"
             />
           </div>
 
-          <div className="space-y-1.5">
+          <div>
             <Label htmlFor="description">Description</Label>
             <textarea
               id="description"
@@ -161,12 +164,12 @@ export function EditResourceForm({
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="block w-full rounded-sm border border-[rgb(221,221,221)] bg-white px-3 py-1.5 text-body-sm text-ink transition-all placeholder:text-ink-faint focus:border-primary focus:outline-none focus:shadow-level-1"
+              className="mt-1 block w-full rounded-xl border border-hairline bg-white px-3 py-2 text-body-sm text-ink shadow-2xs placeholder:text-ink-faint focus:border-primary focus:outline-hidden focus:ring-1 focus:ring-primary dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
             />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
+            <div>
               <Label htmlFor="type">Type de ressource *</Label>
               <Select
                 id="type"
@@ -174,6 +177,7 @@ export function EditResourceForm({
                 value={type}
                 onChange={(e) => setType(e.target.value)}
                 required
+                className="mt-1"
               >
                 {Object.entries(RESOURCE_TYPE_LABELS).map(([val, label]) => (
                   <option key={val} value={val}>{label}</option>
@@ -181,7 +185,7 @@ export function EditResourceForm({
               </Select>
             </div>
 
-            <div className="space-y-1.5">
+            <div>
               <Label htmlFor="visibility">Visibilité *</Label>
               <Select
                 id="visibility"
@@ -189,6 +193,7 @@ export function EditResourceForm({
                 value={visibility}
                 onChange={(e) => setVisibility(e.target.value)}
                 required
+                className="mt-1"
               >
                 <option value="private">Privée (visible uniquement par vous)</option>
                 <option value="public">Publique (accessible aux étudiants de la promo)</option>
@@ -198,7 +203,7 @@ export function EditResourceForm({
 
           {/* Cursus : Filière & Niveau */}
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
+            <div>
               <Label htmlFor="filiere_select">Filière *</Label>
               <Select
                 id="filiere_select"
@@ -210,6 +215,7 @@ export function EditResourceForm({
                   setSelectedPromo('')
                 }}
                 required
+                className="mt-1"
               >
                 <option value="" disabled>Sélectionner une filière</option>
                 {filieres.map((f) => (
@@ -218,7 +224,7 @@ export function EditResourceForm({
               </Select>
             </div>
 
-            <div className="space-y-1.5">
+            <div>
               <Label htmlFor="niveau_select">Niveau *</Label>
               <Select
                 id="niveau_select"
@@ -229,6 +235,7 @@ export function EditResourceForm({
                 }}
                 disabled={!selectedFiliere}
                 required
+                className="mt-1"
               >
                 <option value="" disabled>
                   {!selectedFiliere ? "Choisissez d'abord une filière" : 'Sélectionner le niveau'}
@@ -242,7 +249,7 @@ export function EditResourceForm({
 
           {/* Matière & Promotion */}
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
+            <div>
               <Label htmlFor="matiere_id">Matière *</Label>
               <Select
                 id="matiere_id"
@@ -251,6 +258,7 @@ export function EditResourceForm({
                 onChange={(e) => setSelectedMatiere(e.target.value)}
                 disabled={!selectedNiveau}
                 required
+                className="mt-1"
               >
                 <option value="" disabled>
                   {!selectedNiveau ? "Choisissez d'abord un niveau" : 'Sélectionner la matière'}
@@ -261,7 +269,7 @@ export function EditResourceForm({
               </Select>
             </div>
 
-            <div className="space-y-1.5">
+            <div>
               <Label htmlFor="promo_id">Promotion cible *</Label>
               <Select
                 id="promo_id"
@@ -270,6 +278,7 @@ export function EditResourceForm({
                 onChange={(e) => setSelectedPromo(e.target.value)}
                 disabled={!selectedFiliere}
                 required
+                className="mt-1"
               >
                 <option value="" disabled>
                   {!selectedFiliere ? "Choisissez d'abord une filière" : 'Sélectionner la promotion'}
@@ -282,10 +291,10 @@ export function EditResourceForm({
           </div>
 
           {/* Remplacement du fichier */}
-          <div className="space-y-2 rounded-lg border border-hairline bg-canvas-soft p-4">
+          <div className="space-y-2 rounded-2xl border border-hairline bg-canvas-soft/80 dark:bg-slate-800/60 p-4">
             <Label htmlFor="file">Fichier joint</Label>
             {resource.file_path && (
-              <div className="flex items-center gap-2 text-body-sm text-ink-muted">
+              <div className="flex items-center gap-2 text-body-sm text-ink-muted dark:text-slate-400">
                 <FileText className="h-4 w-4 text-primary" />
                 <span className="truncate">Fichier actuel : {resource.file_size ? formatFileSize(resource.file_size) : 'Enregistré'}</span>
               </div>
@@ -295,18 +304,19 @@ export function EditResourceForm({
               name="file"
               type="file"
               accept=".pdf,.docx,.pptx,.zip"
-              className="bg-white"
+              className="bg-white dark:bg-slate-900 mt-1"
             />
-            <p className="text-caption text-ink-faint">
+            <p className="text-caption text-ink-faint dark:text-slate-500">
               Laissez ce champ vide si vous ne souhaitez pas remplacer le fichier actuel.
             </p>
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="secondary" onClick={() => router.back()}>
               Annuler
             </Button>
-            <Button type="submit" loading={loading}>
+            <Button type="submit" disabled={loading} className="flex items-center gap-2">
+              <Save className="h-4 w-4" />
               {loading ? 'Enregistrement...' : 'Mettre à jour la ressource'}
             </Button>
           </div>
