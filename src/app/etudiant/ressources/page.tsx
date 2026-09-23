@@ -12,16 +12,27 @@ import {
   ExternalLink,
   X,
   Filter,
+  Library,
 } from 'lucide-react'
 import Link from 'next/link'
 import type { ResourceType } from '@/types/database'
-import { formatFileSize } from '@/lib/utils'
+import { formatFileSize, formatDate } from '@/lib/utils'
+import { RESOURCE_TYPE_LABELS } from '@/lib/constants'
 import { RealtimeResourcesWatcher } from '@/components/realtime/RealtimeResourcesWatcher'
+import { PageHeader } from '@/components/layout/PageHeader'
 
 export const metadata = { title: 'Edulink - Mes Ressources' }
 
 interface StudentRessourcesPageProps {
   searchParams?: Promise<{ uploader?: string; prof?: string; matiere?: string }>
+}
+
+const TYPE_STICKER: Record<string, string> = {
+  cours: 'bg-accent-purple/20 text-accent-purple-deep dark:bg-purple-900/30 dark:text-purple-300',
+  fiche: 'bg-accent-teal/15 text-accent-teal dark:bg-teal-900/30 dark:text-teal-300',
+  tp: 'bg-accent-orange/15 text-accent-orange-deep dark:bg-amber-900/30 dark:text-amber-300',
+  examen: 'bg-accent-pink/15 text-accent-pink dark:bg-rose-900/30 dark:text-rose-300',
+  td: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
 }
 
 export default async function StudentRessourcesPage({ searchParams }: StudentRessourcesPageProps) {
@@ -91,7 +102,6 @@ export default async function StudentRessourcesPage({ searchParams }: StudentRes
   let activeMatiereName: string | null = null
 
   if (matiereParam) {
-    // Recherche par code ou par UUID
     const { data: matData } = await supabase
       .from('matieres')
       .select('id, name, code')
@@ -109,7 +119,6 @@ export default async function StudentRessourcesPage({ searchParams }: StudentRes
   let resources: any[] = []
 
   if (studentFiliereId && studentNiveauId) {
-    // 2. Récupérer les ressources du niveau ET celles partagées avec la promotion
     let queryNiveau = supabase
       .from('resources')
       .select(`
@@ -142,7 +151,6 @@ export default async function StudentRessourcesPage({ searchParams }: StudentRes
       queryNiveau = queryNiveau.eq('matiere_id', targetMatiereId)
     }
 
-    // Récupérer aussi les IDs des ressources partagées avec sa promo
     let sharedResourceIds: string[] = []
     if (profile?.promo_id) {
       const { data: sharedAccess } = await supabase
@@ -192,7 +200,6 @@ export default async function StudentRessourcesPage({ searchParams }: StudentRes
 
     const { data: fetchedNiveauResources } = await queryNiveau
 
-    // Fusionner et dédupliquer par id
     const resMap = new Map<string, any>()
     for (const r of fetchedNiveauResources ?? []) {
       resMap.set(r.id, r)
@@ -204,7 +211,6 @@ export default async function StudentRessourcesPage({ searchParams }: StudentRes
     }
     const fetchedResources = Array.from(resMap.values())
 
-    // 3. Génération des signed URLs sécurisées pour chaque fichier
     if (fetchedResources && fetchedResources.length > 0) {
       const resourcesWithUrls = await Promise.all(
         fetchedResources.map(async (r) => {
@@ -222,55 +228,49 @@ export default async function StudentRessourcesPage({ searchParams }: StudentRes
         })
       )
       resources = resourcesWithUrls
-
     }
   }
 
+  const breadcrumb = [
+    { label: 'Espace Étudiant', href: '/etudiant/dashboard' },
+    { label: 'Mes Ressources' },
+  ]
+
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6 pb-12">
       <RealtimeResourcesWatcher />
-      {/* En-tête */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-heading-2 text-ink">Mes Ressources</h1>
-            {filiereInfo && (
-              <Badge variant="purple" className="flex items-center gap-1">
-                <GraduationCap className="h-3 w-3" />
-                {filiereInfo.code || filiereInfo.name}
-              </Badge>
-            )}
-            {niveauName && (
-              <Badge variant="secondary" className="font-semibold text-primary">
-                {niveauName}
-              </Badge>
-            )}
-          </div>
-          <p className="mt-1 text-body-sm text-ink-muted">
-            {filiereInfo && niveauName
-              ? `Bibliothèque numérique de votre niveau (${filiereInfo.name} · ${niveauName}).`
-              : 'Accédez à l\'ensemble des supports de cours, TD et examens.'}
-          </p>
-        </div>
-      </div>
+
+      <PageHeader
+        breadcrumb={breadcrumb}
+        title="Mes Ressources & Documents Pédagogiques"
+        subtitle={
+          filiereInfo && niveauName
+            ? `Supports de cours, TD, examens et fiches pour ${filiereInfo.name} (${niveauName}).`
+            : 'Accédez aux ressources déposées par vos professeurs.'
+        }
+      />
 
       {/* Barre de filtres actifs */}
       {(targetUploaderId || matiereParam) && (
-        <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5 text-body-sm">
+        <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 dark:bg-primary/10 px-4 py-3 text-body-sm shadow-xs">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-primary" />
-            <span className="text-ink">
+            <span className="text-ink dark:text-slate-100">
               {targetUploaderId && (
-                <>Ressources filtrées pour l&apos;enseignant : <strong>{activeTeacherName}</strong></>
+                <>
+                  Ressources du professeur : <strong>{activeTeacherName}</strong>
+                </>
               )}
               {matiereParam && activeMatiereName && (
-                <>{targetUploaderId ? ' · ' : ''}Matière : <strong>{activeMatiereName}</strong></>
+                <>
+                  {targetUploaderId ? ' · ' : ''}Matière : <strong>{activeMatiereName}</strong>
+                </>
               )}
             </span>
           </div>
           <Link
             href="/etudiant/ressources"
-            className="flex items-center gap-1 text-caption font-medium text-primary hover:underline"
+            className="flex items-center gap-1.5 text-caption font-semibold text-primary dark:text-sky-400 hover:underline"
           >
             <X className="h-3.5 w-3.5" />
             Effacer les filtres
@@ -280,85 +280,93 @@ export default async function StudentRessourcesPage({ searchParams }: StudentRes
 
       {/* Liste des ressources */}
       {!studentFiliereId || !studentNiveauId ? (
-        <Card>
-          <CardContent className="py-8">
+        <Card className="rounded-3xl border border-hairline bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+          <CardContent className="py-12">
             <EmptyState
+              icon={<GraduationCap className="h-8 w-8 text-ink-faint" />}
               title="Cursus non renseigné"
               description="Veuillez compléter votre filière et niveau dans votre profil pour accéder aux ressources."
             />
           </CardContent>
         </Card>
       ) : resources.length === 0 ? (
-        <Card>
-          <CardContent className="py-8">
+        <Card className="rounded-3xl border border-hairline bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+          <CardContent className="py-12">
             <EmptyState
-              title={targetUploaderId ? "Aucun document publié par cet enseignant" : "Aucune ressource disponible"}
+              icon={<Library className="h-8 w-8 text-ink-faint" />}
+              title={targetUploaderId ? 'Aucun document publié par cet enseignant' : 'Aucune ressource disponible'}
               description={
                 targetUploaderId
-                  ? "Cet enseignant n'a pas encore mis en ligne de support public pour votre niveau."
+                  ? "Cet enseignant n'a pas encore mis en ligne de support public pour votre promotion."
                   : "Aucune ressource publique n'a encore été publiée pour votre niveau cette année."
               }
             />
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {resources.map((resource) => (
-            <Card key={resource.id} className="transition-all hover:shadow-level-1 flex flex-col justify-between">
-              <CardContent className="p-5 space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="grid h-10 w-10 shrink-0 place-content-center rounded-lg bg-primary/10 text-primary font-amatry">
-                    {getResourceTypeIcon(resource.type)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-primary">
-                        {resource.type}
-                      </span>
-                    </div>
-                    <h3 className="font-semibold text-ink text-title truncate mt-0.5" title={resource.title}>
-                      {resource.title}
-                    </h3>
-                    {resource.description && (
-                      <p className="text-caption text-ink-muted line-clamp-2 mt-1">{resource.description}</p>
-                    )}
-                    <p className="text-caption text-ink-secondary flex items-center gap-1 mt-2">
-                      <Users className="h-3 w-3 shrink-0" />
-                      {resource.profiles?.full_name || 'Enseignant'}
-                    </p>
-                  </div>
+            <Card
+              key={resource.id}
+              className="flex flex-col justify-between rounded-3xl border border-hairline bg-white shadow-xs transition-all hover:-translate-y-1 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+            >
+              <CardContent className="p-5 space-y-3.5">
+                <div className="flex items-start justify-between gap-2">
+                  <span
+                    className={`rounded-lg px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider ${
+                      TYPE_STICKER[resource.type] ?? 'bg-canvas-soft text-ink'
+                    }`}
+                  >
+                    {RESOURCE_TYPE_LABELS[resource.type as keyof typeof RESOURCE_TYPE_LABELS] ?? resource.type}
+                  </span>
+                  {resource.file_size && (
+                    <span className="text-[11px] font-mono text-ink-faint dark:text-slate-400">
+                      {formatFileSize(resource.file_size)}
+                    </span>
+                  )}
                 </div>
 
-                {resource.matieres?.name && (
-                  <div className="space-y-1">
-                    <span className="rounded-md bg-canvas-soft px-2 py-0.5 text-caption font-medium text-ink">
-                      {resource.matieres.name}
-                    </span>
-                  </div>
-                )}
+                <div>
+                  <h3
+                    className="font-bold text-ink dark:text-slate-100 text-body-md line-clamp-1"
+                    title={resource.title}
+                  >
+                    {resource.title}
+                  </h3>
+                  {resource.description && (
+                    <p className="mt-1 text-caption text-ink-muted dark:text-slate-400 line-clamp-2">
+                      {resource.description}
+                    </p>
+                  )}
+                </div>
 
-                <div className="border-t border-hairline pt-3 flex items-center justify-between text-caption text-ink-muted">
-                  <span className="flex items-center gap-1">
+                <div className="space-y-1 rounded-2xl bg-canvas-soft/80 dark:bg-slate-800/60 p-2.5 text-caption border border-hairline dark:border-slate-800">
+                  <div className="flex items-center gap-1.5 font-semibold text-ink dark:text-slate-200 truncate">
+                    <BookOpen className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <span>{resource.matieres?.name ?? 'Matière'}</span>
+                  </div>
+                  <p className="text-[11px] text-ink-muted dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                    <Users className="h-3 w-3 shrink-0" />
+                    {resource.profiles?.full_name || 'Enseignant officiel'}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-hairline dark:border-slate-800 pt-2.5 text-caption text-ink-muted dark:text-slate-400 font-mono">
+                  <span className="flex items-center gap-1 text-[11px]">
                     <Clock className="h-3 w-3" />
-                    {new Date(resource.created_at).toLocaleDateString('fr-FR', {
-                      day: 'numeric',
-                      month: 'short',
-                    })}
+                    {formatDate(resource.created_at)}
                   </span>
-                  {resource.file_size ? (
-                    <span>{formatFileSize(resource.file_size)}</span>
-                  ) : null}
                 </div>
 
                 {/* Boutons d'action pour le fichier */}
-                <div className="flex items-center gap-2 pt-1 border-t border-hairline">
+                <div className="flex items-center gap-2 pt-2 border-t border-hairline dark:border-slate-800">
                   {resource.signedUrl ? (
                     <>
                       <a
                         href={resource.signedUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-md bg-primary/10 py-1.5 px-3 text-caption font-medium text-primary hover:bg-primary/20 transition-colors"
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary/10 dark:bg-primary/20 py-2 px-3 text-caption font-semibold text-primary dark:text-sky-300 hover:bg-primary/20 transition-colors"
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
                         Consulter
@@ -366,14 +374,14 @@ export default async function StudentRessourcesPage({ searchParams }: StudentRes
                       <a
                         href={resource.signedUrl}
                         download={resource.title}
-                        className="inline-flex items-center justify-center rounded-md border border-hairline p-1.5 text-ink-muted hover:text-ink hover:bg-canvas-soft transition-colors"
+                        className="inline-flex items-center justify-center rounded-xl border border-hairline dark:border-slate-700 p-2 text-ink-muted hover:text-ink hover:bg-canvas-soft dark:hover:bg-slate-800 transition-colors"
                         title="Télécharger"
                       >
                         <Download className="h-3.5 w-3.5" />
                       </a>
                     </>
                   ) : (
-                    <span className="text-caption text-ink-faint italic py-1">Fichier indisponible</span>
+                    <span className="text-caption text-ink-faint italic py-1">Fichier non disponible</span>
                   )}
                 </div>
               </CardContent>
@@ -383,18 +391,4 @@ export default async function StudentRessourcesPage({ searchParams }: StudentRes
       )}
     </div>
   )
-}
-
-function getResourceTypeIcon(type: ResourceType) {
-  switch (type) {
-    case 'cours':
-      return <BookOpen className="h-5 w-5" />
-    case 'tp':
-    case 'examen':
-    case 'td':
-    case 'fiche':
-      return <FileText className="h-5 w-5" />
-    default:
-      return <FileText className="h-5 w-5" />
-  }
 }
