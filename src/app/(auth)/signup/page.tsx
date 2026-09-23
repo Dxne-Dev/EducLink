@@ -231,7 +231,7 @@ export default function SignupPage() {
                 'flex items-center justify-center gap-2.5 rounded-2xl border p-3.5 text-sm font-medium transition-all duration-150',
                 role === 'student'
                   ? 'border-primary bg-primary/10 text-primary shadow-sm ring-2 ring-primary/20'
-                  : 'border-hairline bg-white/70 dark:bg-charcoal-card/70 text-ink-muted hover:border-border hover:text-ink'
+                  : 'border-hairline bg-white text-ink-muted hover:border-border hover:text-ink'
               )}
             >
               <GraduationCap className="h-4 w-4" />
@@ -247,7 +247,7 @@ export default function SignupPage() {
                 'flex items-center justify-center gap-2.5 rounded-2xl border p-3.5 text-sm font-medium transition-all duration-150',
                 role === 'teacher'
                   ? 'border-primary bg-primary/10 text-primary shadow-sm ring-2 ring-primary/20'
-                  : 'border-hairline bg-white/70 dark:bg-charcoal-card/70 text-ink-muted hover:border-border hover:text-ink'
+                  : 'border-hairline bg-white text-ink-muted hover:border-border hover:text-ink'
               )}
             >
               <UserCheck className="h-4 w-4" />
@@ -271,18 +271,18 @@ export default function SignupPage() {
                       setNiveauId('')
                     }}
                     required
-                    className="h-12 w-full appearance-none border-transparent bg-transparent px-4 pr-10 text-body-md shadow-none focus:shadow-none focus:outline-none dark:text-white"
+                    className="h-12 w-full appearance-none border-transparent bg-transparent px-4 pr-10 text-body-md text-ink shadow-none focus:shadow-none focus:outline-none"
                   >
-                    <option value="" disabled hidden className="dark:bg-charcoal-card dark:text-white">
+                    <option value="" disabled hidden>
                       {loadingFilieres ? 'Chargement des filières...' : 'Sélectionner une filière'}
                     </option>
                     {filieres.map((f) => (
-                      <option key={f.id} value={f.id} className="bg-white dark:bg-charcoal-card text-ink dark:text-white">
+                      <option key={f.id} value={f.id} className="bg-white text-ink">
                         {f.name} {f.code ? `(${f.code})` : ''}
                       </option>
                     ))}
                     {!loadingFilieres && filieres.length === 0 && (
-                      <option value="" disabled className="dark:bg-charcoal-card dark:text-white">Aucune filière configurée</option>
+                      <option value="" disabled>Aucune filière configurée</option>
                     )}
                   </Select>
                   <div className="pointer-events-none absolute right-4 text-ink-muted">
@@ -304,13 +304,13 @@ export default function SignupPage() {
                     onChange={(e) => setNiveauId(e.target.value)}
                     required
                     disabled={!filiereId}
-                    className="h-12 w-full appearance-none border-transparent bg-transparent px-4 pr-10 text-body-md shadow-none focus:shadow-none focus:outline-none disabled:opacity-50 dark:text-white"
+                    className="h-12 w-full appearance-none border-transparent bg-transparent px-4 pr-10 text-body-md text-ink shadow-none focus:shadow-none focus:outline-none disabled:opacity-50"
                   >
-                    <option value="" disabled hidden className="dark:bg-charcoal-card dark:text-white">
+                    <option value="" disabled hidden>
                       {loadingNiveaux ? 'Chargement...' : !filiereId ? 'Sélectionnez d\'abord une filière' : 'Sélectionner un niveau'}
                     </option>
                     {niveaux.map((n) => (
-                      <option key={n.id} value={n.id} className="bg-white dark:bg-charcoal-card text-ink dark:text-white">
+                      <option key={n.id} value={n.id} className="bg-white text-ink">
                         {n.name}
                       </option>
                     ))}

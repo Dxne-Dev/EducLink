@@ -40,7 +40,7 @@ function AuthCard({ title, description, footer, children, className }: AuthCardP
 /** Wrapper input "glass" — light, hairline, focus ring primary (style sign-in.tsx) */
 function GlassInput({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-hairline bg-white/90 dark:bg-charcoal-card/90 shadow-level-1 transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15">
+    <div className="rounded-2xl border border-hairline bg-white shadow-level-1 transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15">
       {children}
     </div>
   )
