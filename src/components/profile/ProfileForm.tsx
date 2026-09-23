@@ -47,7 +47,7 @@ export function ProfileForm() {
   return (
     <div className="space-y-6">
       {/* Modification Mot de passe */}
-      <Card>
+      <Card className="rounded-3xl border border-hairline bg-white dark:border-slate-800 dark:bg-slate-900">
         <CardHeader>
           <CardTitle className="text-title flex items-center gap-2">
             <KeyRound className="h-4 w-4 text-primary" />
