@@ -1,77 +1,104 @@
 import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { PromotionForm } from './promotion-form'
-import { PromotionRow } from './promotion-row'
 import { Building2 } from 'lucide-react'
+import { PromotionForm } from './promotion-form'
+import { PromotionActions } from './promotion-actions'
+import { ListPageShell } from '@/components/admin/ListPageShell'
+import { Badge } from '@/components/ui/Badge'
 
 export const metadata = { title: 'Edulink - Promotions' }
 
 export default async function PromotionAdminPage() {
   const supabase = await createClient()
 
-  const [promotions, filieres, niveaux] = await Promise.all([
+  const [promotionsRes, filieresRes, niveauxRes] = await Promise.all([
     supabase
       .from('promotions')
       .select(`*, filieres(name, code), niveaux(name)`)
       .order('year_start', { ascending: false }),
-    supabase.from('filieres').select('id, name'),
-    supabase.from('niveaux').select('id, name, filiere_id'),
+    supabase.from('filieres').select('id, name').order('name'),
+    supabase.from('niveaux').select('id, name, filiere_id').order('sort_order'),
   ])
 
+  const promotions = promotionsRes.data ?? []
+  const filieres = filieresRes.data ?? []
+  const niveaux = niveauxRes.data ?? []
+
+  const breadcrumb = [
+    { label: 'Administration', href: '/admin/dashboard' },
+    { label: 'Promotions' },
+  ]
+
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <div>
-        <h1 className="text-heading-2 text-ink">Promotions</h1>
-        <p className="mt-1 text-body-sm text-ink-muted">
-          Gérez les promotions (années académiques) par filière et niveau.
-        </p>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-title">Liste des promotions</CardTitle>
-              <CardDescription>{promotions.data?.length ?? 0} promotion(s)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {promotions.data && promotions.data.length > 0 ? (
-                <ul className="divide-y divide-hairline">
-                  {promotions.data.map((p) => (
-                    <PromotionRow
-                      key={p.id}
-                      promotion={p}
-                      niveaux={niveaux.data ?? []}
-                    />
-                  ))}
-                </ul>
-              ) : (
-                <EmptyState
-                  icon={<Building2 className="h-6 w-6 text-ink-faint" />}
-                  title="Aucune promotion"
-                  description="Créez votre première promotion avec le formulaire."
-                />
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-title">Ajouter une promotion</CardTitle>
-              <CardDescription>Filière, niveau et année scolaire.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PromotionForm
-                filieres={filieres.data ?? []}
-                niveaux={niveaux.data ?? []}
-              />
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
+    <ListPageShell
+      breadcrumb={breadcrumb}
+      title="Promotions"
+      subtitle="Gérez les promotions (cohortes académiques) par filière et niveau"
+      columns={[
+        {
+          header: 'Promotion',
+          accessor: 'name',
+          render: (value, row: any) => (
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-orange/15 text-accent-orange-deep dark:bg-amber-900/30 dark:text-amber-300">
+                <Building2 className="h-4 w-4" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-ink dark:text-slate-100">{value}</span>
+                  {row.is_active ? (
+                    <Badge variant="success" className="text-[10px] px-1.5 py-0.5">
+                      Active
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5">
+                      Inactive
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+          ),
+        },
+        {
+          header: 'Filière',
+          accessor: 'filieres',
+          render: (value: any) => (
+            <span className="text-body-sm font-medium text-ink-secondary dark:text-slate-300">
+              {value?.name ?? '—'}
+            </span>
+          ),
+        },
+        {
+          header: 'Niveau actuel',
+          accessor: 'niveaux',
+          render: (value: any) => (
+            <Badge variant="secondary" className="font-semibold text-primary">
+              {value?.name ?? '—'}
+            </Badge>
+          ),
+        },
+        {
+          header: 'Année académique',
+          accessor: 'year_start',
+          render: (_, row: any) => (
+            <span className="font-mono text-caption text-ink-muted dark:text-slate-400">
+              {row.year_start} – {row.year_end}
+            </span>
+          ),
+        },
+      ]}
+      data={promotions}
+      emptyState={{
+        title: 'Aucune promotion',
+        description: 'Créez votre première promotion avec le formulaire ci-contre.',
+        icon: <Building2 className="h-8 w-8 text-ink-faint" />,
+      }}
+      formSlot={<PromotionForm filieres={filieres} niveaux={niveaux} />}
+      formTitle="Ajouter une promotion"
+      formDescription="Associez une filière, un niveau et la période scolaire."
+      renderActions={(promo: any) => (
+        <PromotionActions promotion={promo} niveaux={niveaux} />
+      )}
+    />
   )
 }

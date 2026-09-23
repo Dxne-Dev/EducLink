@@ -170,6 +170,30 @@ export async function deleteMatiere(id: string) {
   return { success: true }
 }
 
+export async function updateMatiere(id: string, formData: FormData) {
+  const supabase = await requireAdmin()
+  if (!supabase) return { error: 'Accès refusé' }
+
+  const niveau_id = (formData.get('niveau_id') as string)?.trim()
+  const name = (formData.get('name') as string)?.trim()
+  const code = (formData.get('code') as string)?.trim() || null
+
+  if (!niveau_id || !name) {
+    return { error: 'Niveau et nom sont requis' }
+  }
+
+  const { error } = await supabase
+    .from('matieres')
+    .update({ niveau_id, name, code })
+    .eq('id', id)
+
+  if (error) return { error: 'Erreur lors de la mise à jour' }
+
+  revalidatePath('/admin/matieres')
+  revalidatePath('/admin/dashboard')
+  return { success: true }
+}
+
 /* ---------- Promotions ---------- */
 
 export async function createPromotion(formData: FormData) {

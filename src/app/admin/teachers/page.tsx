@@ -1,12 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
-import { EmptyState } from '@/components/ui/EmptyState'
 import { Badge } from '@/components/ui/Badge'
-import { formatDate } from '@/lib/utils'
 import { TeacherRegistryForm } from './registry/teacher-registry-form'
 import { DeleteTeacherButton } from './registry/delete-teacher-button'
 import { AssignMatieresModal } from './assign-matieres-modal'
 import { Award, Mail, CheckCircle2, Clock, BookOpen, GraduationCap } from 'lucide-react'
+import { ListPageShell } from '@/components/admin/ListPageShell'
 
 export const metadata = { title: 'Edulink - Enseignants & Affectation Matières' }
 
@@ -50,158 +48,154 @@ export default async function TeachersAdminPage() {
   const teacherProfiles = profilesRes.data ?? []
   const teacherMatieres = teacherMatieresRes.data ?? []
 
+  const breadcrumb = [
+    { label: 'Administration', href: '/admin/dashboard' },
+    { label: 'Enseignants & Matières' },
+  ]
+
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <div>
-        <h1 className="text-heading-2 text-ink">Enseignants & Affectation des Matières</h1>
-        <p className="mt-1 text-body-sm text-ink-muted">
-          Habilitez les enseignants officiels et associez-les aux matières qu'ils dispensent pour chaque niveau.
-        </p>
-      </div>
+    <ListPageShell
+      breadcrumb={breadcrumb}
+      title="Corps Enseignant"
+      subtitle="Habilitez les enseignants officiels et associez-les aux matières qu'ils dispensent pour chaque niveau"
+      columns={[
+        {
+          header: 'Enseignant',
+          accessor: 'full_name',
+          render: (value, t: any) => {
+            const profile = teacherProfiles.find(
+              (p: any) =>
+                (p.email && t.email && p.email.toLowerCase() === t.email.toLowerCase()) ||
+                p.full_name?.toLowerCase() === t.full_name?.toLowerCase()
+            )
+            const isActivated = Boolean(t.is_used || profile)
+            const initial = (value || 'E').charAt(0).toUpperCase()
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Colonne liste des enseignants */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-title">Corps Enseignant Habilité</CardTitle>
-              <CardDescription>
-                {teachers.length} enseignant(s) dans le registre universitaire
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {teachers.length === 0 ? (
-                <EmptyState
-                  title="Aucun enseignant habilité"
-                  description="Ajoutez des enseignants via le formulaire ci-contre pour autoriser leur inscription et leur affecter des matières."
-                />
-              ) : (
-                <ul className="divide-y divide-hairline">
-                  {teachers.map((t: any) => {
-                    // Trouver le profil correspondant par email (prioritaire) ou par nom
-                    const profile = teacherProfiles.find(
-                      (p: any) =>
-                        (p.email && t.email && p.email.toLowerCase() === t.email.toLowerCase()) ||
-                        p.full_name?.toLowerCase() === t.full_name?.toLowerCase()
-                    )
+            return (
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-orange/15 text-accent-orange-deep dark:bg-amber-900/30 dark:text-amber-300 font-amatry font-bold">
+                  {initial}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-ink dark:text-slate-100">{t.full_name}</p>
+                    {isActivated ? (
+                      <Badge variant="success" className="text-[10px] px-1.5 py-0.5">
+                        <CheckCircle2 className="h-3 w-3 mr-1" /> Activé
+                      </Badge>
+                    ) : (
+                      <Badge variant="warning" className="text-[10px] px-1.5 py-0.5">
+                        <Clock className="h-3 w-3 mr-1" /> En attente
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-caption text-ink-muted dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                    <Mail className="h-3 w-3" /> {t.email}
+                    {t.employee_id && (
+                      <span className="ml-1 text-ink-faint">
+                        · Matr. {t.employee_id}
+                      </span>
+                    )}
+                  </p>
+                  {t.filieres && (
+                    <p className="text-caption text-ink-secondary dark:text-slate-300 mt-0.5 flex items-center gap-1">
+                      <GraduationCap className="h-3 w-3 text-accent-purple-deep" />
+                      Filière : {t.filieres.name}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )
+          },
+        },
+        {
+          header: 'Matières dispensées',
+          className: 'min-w-[200px]',
+          render: (_, t: any) => {
+            const profile = teacherProfiles.find(
+              (p: any) =>
+                (p.email && t.email && p.email.toLowerCase() === t.email.toLowerCase()) ||
+                p.full_name?.toLowerCase() === t.full_name?.toLowerCase()
+            )
+            const assigned = teacherMatieres.filter(
+              (tm: any) =>
+                tm.teacher_registry_id === t.id ||
+                (profile && tm.teacher_id === profile.id)
+            )
+            const assignedMatiereIds = assigned.map((tm: any) => tm.matiere_id)
+            const assignedMatieres = matieres.filter((m) =>
+              assignedMatiereIds.includes(m.id)
+            )
 
-                    const isActivated = Boolean(t.is_used || profile)
+            if (assignedMatieres.length === 0) {
+              return (
+                <span className="text-caption text-ink-faint italic">
+                  Aucune matière affectée
+                </span>
+              )
+            }
 
-                    // Trouver les IDs des matières affectées à cet enseignant (soit par registry_id soit par teacher_id)
-                    const assigned = teacherMatieres.filter(
-                      (tm: any) =>
-                        tm.teacher_registry_id === t.id ||
-                        (profile && tm.teacher_id === profile.id)
-                    )
-                    const assignedMatiereIds = assigned.map((tm: any) => tm.matiere_id)
-                    const assignedMatieres = matieres.filter((m) =>
-                      assignedMatiereIds.includes(m.id)
-                    )
+            return (
+              <div className="flex flex-wrap items-center gap-1.5 max-w-sm">
+                {assignedMatieres.map((m) => (
+                  <span
+                    key={m.id}
+                    className="inline-flex items-center gap-1 rounded-md bg-canvas-soft dark:bg-slate-800 px-2 py-0.5 text-[11px] font-medium text-ink dark:text-slate-200 border border-hairline dark:border-slate-700"
+                    title={`${m.name} (${m.niveaux?.name ?? ''})`}
+                  >
+                    <span>{m.name}</span>
+                    {m.niveaux?.name && (
+                      <span className="text-[9px] font-semibold text-primary">
+                        ({m.niveaux.name})
+                      </span>
+                    )}
+                  </span>
+                ))}
+              </div>
+            )
+          },
+        },
+      ]}
+      data={teachers}
+      emptyState={{
+        title: 'Aucun enseignant habilité',
+        description:
+          'Ajoutez des enseignants via le formulaire ci-contre pour autoriser leur inscription et leur affecter des matières.',
+        icon: <Award className="h-8 w-8 text-ink-faint" />,
+      }}
+      formSlot={<TeacherRegistryForm filieres={filieres} />}
+      formTitle="Habiliter un enseignant"
+      formDescription="Enregistrez l'email officiel pour autoriser la création du compte enseignant."
+      renderActions={(t: any) => {
+        const profile = teacherProfiles.find(
+          (p: any) =>
+            (p.email && t.email && p.email.toLowerCase() === t.email.toLowerCase()) ||
+            p.full_name?.toLowerCase() === t.full_name?.toLowerCase()
+        )
+        const assigned = teacherMatieres.filter(
+          (tm: any) =>
+            tm.teacher_registry_id === t.id ||
+            (profile && tm.teacher_id === profile.id)
+        )
+        const assignedMatiereIds = assigned.map((tm: any) => tm.matiere_id)
 
-                    return (
-                      <li key={t.id} className="py-4 space-y-3">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex items-start gap-3">
-                            <div className="rounded-md bg-accent-orange/15 p-2 text-accent-orange-deep">
-                              <Award className="h-4 w-4" />
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <p className="font-medium text-ink">{t.full_name}</p>
-                                {isActivated ? (
-                                  <Badge variant="success" className="text-[10px]">
-                                    <CheckCircle2 className="h-3 w-3 mr-1" /> Compte activé
-                                  </Badge>
-                                ) : (
-                                  <Badge variant="warning" className="text-[10px]">
-                                    <Clock className="h-3 w-3 mr-1" /> En attente
-                                  </Badge>
-                                )}
-                              </div>
-                              <p className="text-caption text-ink-muted flex items-center gap-1 mt-0.5">
-                                <Mail className="h-3 w-3" /> {t.email}
-                                {t.employee_id && (
-                                  <span className="ml-2 text-ink-faint">
-                                    · Matricule : {t.employee_id}
-                                  </span>
-                                )}
-                              </p>
-                              {t.filieres && (
-                                <p className="text-caption text-ink-secondary mt-0.5 flex items-center gap-1">
-                                  <GraduationCap className="h-3 w-3" />
-                                  Filière principale : {t.filieres.name}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            {/* Modal d'affectation des matières */}
-                            <AssignMatieresModal
-                              teacher={{
-                                id: t.id,
-                                full_name: t.full_name,
-                                email: t.email,
-                                profile_id: profile?.id || null,
-                              }}
-                              assignedMatiereIds={assignedMatiereIds}
-                              allMatieres={matieres}
-                              filieres={filieres}
-                            />
-                            <DeleteTeacherButton id={t.id} isUsed={t.is_used} />
-                          </div>
-                        </div>
-
-                        {/* Badges des matières affectées à cet enseignant */}
-                        <div className="pl-9">
-                          {assignedMatieres.length === 0 ? (
-                            <p className="text-caption text-ink-faint italic">
-                              Aucune matière encore affectée à cet enseignant.
-                            </p>
-                          ) : (
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="text-caption font-medium text-ink-muted flex items-center gap-1 mr-1">
-                                <BookOpen className="h-3 w-3" /> Matières :
-                              </span>
-                              {assignedMatieres.map((m) => (
-                                <span
-                                  key={m.id}
-                                  className="inline-flex items-center gap-1 rounded bg-canvas-soft px-2 py-0.5 text-caption font-medium text-ink"
-                                  title={`${m.name} (${m.niveaux?.name ?? ''})`}
-                                >
-                                  {m.name}
-                                  <span className="text-[10px] text-primary">
-                                    ({m.niveaux?.name ?? ''})
-                                  </span>
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </li>
-                    )
-                  })}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Colonne formulaire d'habilitation */}
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-title">Habiliter un enseignant</CardTitle>
-              <CardDescription>
-                Enregistrez l'email officiel pour autoriser la création du compte enseignant.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <TeacherRegistryForm filieres={filieres} />
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
+        return (
+          <div className="flex items-center gap-1.5">
+            <AssignMatieresModal
+              teacher={{
+                id: t.id,
+                full_name: t.full_name,
+                email: t.email,
+                profile_id: profile?.id || null,
+              }}
+              assignedMatiereIds={assignedMatiereIds}
+              allMatieres={matieres}
+              filieres={filieres}
+            />
+            <DeleteTeacherButton id={t.id} isUsed={t.is_used} />
+          </div>
+        )
+      }}
+    />
   )
 }
