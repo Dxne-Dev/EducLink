@@ -218,6 +218,23 @@ export default function Home() {
 
   useEffect(() => {
     const supabase = createClient()
+
+    // Redirection automatique des utilisateurs déjà connectés
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single()
+
+        const role = profile?.role || 'student'
+        if (role === 'admin') router.replace('/admin/dashboard')
+        else if (role === 'teacher') router.replace('/prof/dashboard')
+        else router.replace('/etudiant/dashboard')
+      }
+    })
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         router.replace('/reset-password')

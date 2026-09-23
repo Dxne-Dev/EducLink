@@ -37,6 +37,7 @@ export const metadata: Metadata = {
 };
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { SessionTimeoutProvider } from "@/components/auth/SessionTimeoutProvider";
 
 export default function RootLayout({
   children,
@@ -51,7 +52,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-          {children}
+          <SessionTimeoutProvider>
+            {children}
+          </SessionTimeoutProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -36,14 +36,37 @@ export async function updateSession(request: NextRequest) {
     path.startsWith('/etudiant') ||
     path.startsWith('/admin')
 
-  // Redirection si non authentifié sur une page protégée
+  const isAuthOrRootPath = path === '/' || path === '/login' || path === '/signup'
+
+  // 1. Redirection si non authentifié sur une page protégée
   if (!user && isProtectedPath) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  // Contrôles d'accès par rôle
+  // 2. Redirection des utilisateurs déjà connectés sur l'accueil ou auth vers leur dashboard
+  if (user && isAuthOrRootPath) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const role = profile?.role || 'student'
+    const url = request.nextUrl.clone()
+
+    if (role === 'admin') {
+      url.pathname = '/admin/dashboard'
+    } else if (role === 'teacher') {
+      url.pathname = '/prof/dashboard'
+    } else {
+      url.pathname = '/etudiant/dashboard'
+    }
+    return NextResponse.redirect(url)
+  }
+
+  // 3. Contrôles d'accès par rôle sur les pages protégées
   if (user && isProtectedPath) {
     const { data: profile } = await supabase
       .from('profiles')

@@ -18,6 +18,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [resetSent, setResetSent] = useState(false)
   const [verifiedSuccess, setVerifiedSuccess] = useState(false)
+  const [inactivityAlert, setInactivityAlert] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
@@ -26,6 +27,9 @@ export default function LoginPage() {
     const params = new URLSearchParams(window.location.search)
     if (params.get('verified') === 'true') {
       setVerifiedSuccess(true)
+    }
+    if (params.get('reason') === 'inactivity') {
+      setInactivityAlert(true)
     }
   }, [])
 
@@ -81,6 +85,11 @@ export default function LoginPage() {
       }
     >
       <form onSubmit={handleSubmit} className="space-y-5">
+        {inactivityAlert && (
+          <Alert variant="warning">
+            Votre session a expiré après une période d&apos;inactivité prolongée (30 minutes). Veuillez vous reconnecter.
+          </Alert>
+        )}
         {verifiedSuccess && (
           <Alert variant="success">
             Votre adresse email a été confirmée avec succès ! Vous pouvez maintenant vous connecter.
