@@ -5,6 +5,7 @@ import { DeleteTeacherButton } from './registry/delete-teacher-button'
 import { AssignMatieresModal } from './assign-matieres-modal'
 import { Award, Mail, CheckCircle2, Clock, BookOpen, GraduationCap } from 'lucide-react'
 import { ListPageShell } from '@/components/admin/ListPageShell'
+import { Icon } from '@/components/ui/Icon'
 
 export const metadata = { title: 'Edulink - Enseignants & Affectation Matières' }
 
@@ -74,7 +75,7 @@ export default async function TeachersAdminPage() {
             return (
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent-orange/15 text-accent-orange-deep dark:bg-amber-900/30 dark:text-amber-300 shadow-sm ring-1 ring-accent-orange/20">
-                  <span className="iconify text-xl" data-icon="solar:user-check-bold-duotone" />
+                  <Icon name="solar:user-check-bold-duotone" className="text-xl" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -161,7 +162,7 @@ export default async function TeachersAdminPage() {
         title: 'Aucun enseignant habilité',
         description:
           'Ajoutez des enseignants via le formulaire ci-contre pour autoriser leur inscription et leur affecter des matières.',
-        icon: <span className="iconify text-4xl text-accent-orange-deep" data-icon="solar:user-check-bold-duotone" />,
+        icon: <Icon name="solar:user-check-bold-duotone" className="text-4xl text-accent-orange-deep" />,
       }}
       formSlot={<TeacherRegistryForm filieres={filieres} />}
       formTitle="Habiliter un enseignant"

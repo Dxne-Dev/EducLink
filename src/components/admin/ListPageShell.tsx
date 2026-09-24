@@ -81,7 +81,7 @@ export function ListPageShell<T>({
                           </TableHead>
                         ))}
                         {renderActions && (
-                          <TableHead className="text-right text-caption font-semibold text-ink-secondary dark:text-slate-300 py-3 w-28">
+                          <TableHead className="text-right text-caption font-semibold text-ink-secondary dark:text-slate-300 py-3 px-4 whitespace-nowrap">
                             Actions
                           </TableHead>
                         )}

@@ -115,18 +115,20 @@ export default async function RapportsAdminPage() {
   )
 }
 
+import { Icon } from '@/components/ui/Icon'
+
 function getCategoryIcon(cat: string) {
   switch (cat) {
     case 'gabarit':
-      return <span className="iconify text-xl" data-icon="solar:code-file-bold-duotone" />
+      return <Icon name="solar:code-file-bold-duotone" className="text-xl" />
     case 'guide':
-      return <span className="iconify text-xl" data-icon="solar:compass-bold-duotone" />
+      return <Icon name="solar:compass-bold-duotone" className="text-xl" />
     case 'exemple':
-      return <span className="iconify text-xl" data-icon="solar:diploma-verified-bold-duotone" />
+      return <Icon name="solar:diploma-verified-bold-duotone" className="text-xl" />
     case 'convention':
-      return <span className="iconify text-xl" data-icon="solar:document-medicine-bold-duotone" />
+      return <Icon name="solar:document-medicine-bold-duotone" className="text-xl" />
     default:
-      return <span className="iconify text-xl" data-icon="solar:file-text-bold-duotone" />
+      return <Icon name="solar:file-text-bold-duotone" className="text-xl" />
   }
 }
 

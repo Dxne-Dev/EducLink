@@ -8,6 +8,8 @@ import type { UserRole } from '@/types/database'
 import { Users } from 'lucide-react'
 import { ListPageShell } from '@/components/admin/ListPageShell'
 
+import { Icon } from '@/components/ui/Icon'
+
 export const metadata = { title: 'Edulink - Utilisateurs' }
 
 export default async function UsersAdminPage() {
@@ -82,7 +84,7 @@ export default async function UsersAdminPage() {
       emptyState={{
         title: 'Aucun utilisateur',
         description: 'Les comptes créés apparaîtront ici.',
-        icon: <span className="iconify text-4xl text-primary" data-icon="solar:users-group-rounded-bold-duotone" />,
+        icon: <Icon name="solar:users-group-rounded-bold-duotone" className="text-4xl text-primary" />,
       }}
       renderActions={(u: any) => (
         <div className="flex items-center gap-2">

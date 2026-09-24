@@ -36,6 +36,7 @@ export const metadata: Metadata = {
   manifest: "/site.webmanifest",
 };
 
+import Script from "next/script";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SessionTimeoutProvider } from "@/components/auth/SessionTimeoutProvider";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -59,6 +60,7 @@ export default function RootLayout({
             </SessionTimeoutProvider>
           </ToastProvider>
         </ThemeProvider>
+        <Script src="https://code.iconify.design/3/3.1.1/iconify.min.js" strategy="afterInteractive" />
       </body>
     </html>
   );

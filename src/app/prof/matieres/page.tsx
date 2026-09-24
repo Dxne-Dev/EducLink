@@ -7,6 +7,8 @@ import { BookMarked, GraduationCap, BookOpen, FileText, Plus, Info } from 'lucid
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/Badge'
 
+import { Icon } from '@/components/ui/Icon'
+
 export const metadata = { title: 'Edulink — Mes Matières (Enseignant)' }
 
 export default async function ProfMesMatieresPage() {
@@ -117,7 +119,7 @@ export default async function ProfMesMatieresPage() {
         <Card className="rounded-3xl border border-hairline bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
           <CardContent className="py-12">
             <EmptyState
-              icon={<span className="iconify text-4xl text-accent-teal" data-icon="solar:book-bookmark-bold-duotone" />}
+              icon={<Icon name="solar:book-bookmark-bold-duotone" className="text-4xl text-accent-teal" />}
               title="Aucune matière assignée"
               description="L'administration universitaire ne vous a pas encore attribué de matières. Veuillez contacter le secrétariat académique."
             />
@@ -134,7 +136,7 @@ export default async function ProfMesMatieresPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-purple/15 text-accent-purple-deep dark:bg-purple-900/30 dark:text-purple-300 shadow-sm ring-1 ring-accent-purple/20">
-                      <span className="iconify text-2xl" data-icon="solar:diploma-verified-bold-duotone" />
+                      <Icon name="solar:diploma-verified-bold-duotone" className="text-2xl" />
                     </div>
                     <div>
                       <CardTitle className="text-title text-ink dark:text-slate-100">
@@ -161,7 +163,7 @@ export default async function ProfMesMatieresPage() {
                       >
                         <div className="flex items-start gap-3">
                           <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-accent-teal/15 text-accent-teal dark:bg-teal-900/30 dark:text-teal-300 shadow-sm ring-1 ring-accent-teal/20">
-                            <span className="iconify text-xl" data-icon="solar:book-bookmark-bold-duotone" />
+                            <Icon name="solar:book-bookmark-bold-duotone" className="text-xl" />
                           </div>
                           <div>
                             <p className="font-semibold text-ink dark:text-slate-100 text-body-md">{m.name}</p>
@@ -179,14 +181,14 @@ export default async function ProfMesMatieresPage() {
 
                         <div className="flex items-center gap-2.5">
                           <span className="inline-flex items-center gap-1.5 rounded-xl border border-hairline dark:border-slate-800 bg-canvas-soft dark:bg-slate-800 px-3 py-1.5 text-caption font-medium text-ink-muted dark:text-slate-300">
-                            <span className="iconify text-sm text-primary" data-icon="solar:document-text-bold-duotone" />
+                            <Icon name="solar:document-text-bold-duotone" className="text-sm text-primary" />
                             {count} document{count > 1 ? 's' : ''}
                           </span>
                           <Link
                             href={`/prof/mes-cours?matiere=${encodeURIComponent(m.code || m.id)}`}
                             className="inline-flex items-center gap-1.5 rounded-xl border border-hairline dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-caption font-semibold text-ink dark:text-slate-200 transition-colors hover:bg-canvas-soft dark:hover:bg-slate-800 shadow-xs"
                           >
-                            <span className="iconify text-sm text-accent-teal" data-icon="solar:folder-open-bold-duotone" />
+                            <Icon name="solar:folder-open-bold-duotone" className="text-sm text-accent-teal" />
                             Voir les cours
                           </Link>
                         </div>

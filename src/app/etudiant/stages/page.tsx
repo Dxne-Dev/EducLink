@@ -14,6 +14,7 @@ import {
   BookOpen,
 } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { Icon } from '@/components/ui/Icon'
 
 export const metadata = { title: 'Edulink — Espace Stage & Méthodologie' }
 
@@ -182,7 +183,7 @@ export default async function StudentStagesPage() {
         <Card className="rounded-3xl border border-hairline bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
           <CardContent className="py-12">
             <EmptyState
-              icon={<span className="iconify text-4xl text-accent-orange-deep" data-icon="solar:document-medicine-bold-duotone" />}
+              icon={<Icon name="solar:document-medicine-bold-duotone" className="text-4xl text-accent-orange-deep" />}
               title="Aucun document disponible"
               description="Les gabarits, exemples et guides seront publiés par l'administration."
             />
@@ -215,11 +216,11 @@ export default async function StudentStagesPage() {
                   <div className="flex items-start gap-3">
                     <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${iconBg}`}>
                       {isGabarit ? (
-                        <span className="iconify text-2xl" data-icon="solar:code-file-bold-duotone" />
+                        <Icon name="solar:code-file-bold-duotone" className="text-2xl" />
                       ) : isExemple ? (
-                        <span className="iconify text-2xl" data-icon="solar:diploma-verified-bold-duotone" />
+                        <Icon name="solar:diploma-verified-bold-duotone" className="text-2xl" />
                       ) : (
-                        <span className="iconify text-2xl" data-icon="solar:compass-bold-duotone" />
+                        <Icon name="solar:compass-bold-duotone" className="text-2xl" />
                       )}
                     </div>
                     <div className="min-w-0 flex-1">

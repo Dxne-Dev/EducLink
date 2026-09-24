@@ -5,6 +5,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { BookOpen, Mail, GraduationCap, ArrowRight, UserCheck, Award } from 'lucide-react'
 import Link from 'next/link'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { Icon } from '@/components/ui/Icon'
 
 export const metadata = { title: 'Edulink - Mes Profs' }
 
@@ -142,7 +143,7 @@ export default async function StudentProfsPage() {
         <Card className="rounded-3xl border border-hairline bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
           <CardContent className="py-12">
             <EmptyState
-              icon={<span className="iconify text-4xl text-accent-purple-deep" data-icon="solar:diploma-verified-bold-duotone" />}
+              icon={<Icon name="solar:diploma-verified-bold-duotone" className="text-4xl text-accent-purple-deep" />}
               title="Filière non renseignée"
               description="Votre profil n'a pas encore de filière assignée. Rendez-vous dans votre profil ou contactez l'administration."
             />
@@ -152,7 +153,7 @@ export default async function StudentProfsPage() {
         <Card className="rounded-3xl border border-hairline bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
           <CardContent className="py-12">
             <EmptyState
-              icon={<span className="iconify text-4xl text-accent-orange-deep" data-icon="solar:user-check-bold-duotone" />}
+              icon={<Icon name="solar:user-check-bold-duotone" className="text-4xl text-accent-orange-deep" />}
               title="Aucun enseignant affecté pour le moment"
               description="L'administration universitaire n'a pas encore finalisé les affectations de professeurs pour les matières de votre niveau."
             />
