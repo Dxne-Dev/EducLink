@@ -20,30 +20,87 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
   const lastRecordedRef = useRef<number>(Date.now())
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
 
-  // Vérifier si l'utilisateur est connecté
+  // Vérifier si l'utilisateur est connecté et synchroniser entre onglets
   useEffect(() => {
     const supabase = createClient()
-    
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(Boolean(session))
-      if (session) {
+    const isAuthOrRoot = pathname === '/' || pathname === '/login' || pathname === '/signup'
+
+    async function syncAuth() {
+      const { data: { session } } = await supabase.auth.getSession()
+      const hasSession = Boolean(session)
+      setIsAuthenticated(hasSession)
+
+      if (hasSession) {
         localStorage.setItem(STORAGE_KEY, String(Date.now()))
+        // Si l'utilisateur est sur la page d'accueil ou de login et qu'une session existe, rediriger immédiatement
+        if (isAuthOrRoot && session?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single()
+
+          const role = profile?.role || 'student'
+          if (role === 'admin') router.replace('/admin/dashboard')
+          else if (role === 'teacher') router.replace('/prof/dashboard')
+          else router.replace('/etudiant/dashboard')
+        }
       }
-    })
+    }
+
+    syncAuth()
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(Boolean(session))
-      if (session) {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const hasSession = Boolean(session)
+      setIsAuthenticated(hasSession)
+
+      if (hasSession) {
         localStorage.setItem(STORAGE_KEY, String(Date.now()))
+        if (isAuthOrRoot && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single()
+
+          const role = profile?.role || 'student'
+          if (role === 'admin') router.replace('/admin/dashboard')
+          else if (role === 'teacher') router.replace('/prof/dashboard')
+          else router.replace('/etudiant/dashboard')
+        }
       } else {
         localStorage.removeItem(STORAGE_KEY)
+        if (!isAuthOrRoot && event === 'SIGNED_OUT') {
+          router.replace('/login')
+        }
       }
     })
 
-    return () => subscription.unsubscribe()
-  }, [])
+    // Écouteur inter-onglets (storage event)
+    function handleStorageChange(e: StorageEvent) {
+      if (e.key === STORAGE_KEY || e.key?.includes('auth-token') || e.key?.includes('supabase')) {
+        syncAuth()
+      }
+    }
+
+    // Écouteur de retour au premier plan (onglet réactivé)
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        syncAuth()
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      subscription.unsubscribe()
+      window.removeEventListener('storage', handleStorageChange)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [pathname, router])
 
   // Déconnexion automatique en cas d'inactivité
   const handleTimeoutLogout = useCallback(async () => {
