@@ -1,7 +1,9 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { TESTIMONIALS } from '@/lib/testimonials'
 import {
   BookOpen,
@@ -17,6 +19,8 @@ import {
   GraduationCap,
   Layers,
   Lock,
+  Menu,
+  X,
 } from 'lucide-react'
 import { BentoGrid, BentoCard } from '@/components/ui/bento-grid'
 
@@ -205,10 +209,35 @@ function DocProductMockup() {
 }
 
 export function LandingView() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden'
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setMobileMenuOpen(false)
+      }
+      window.addEventListener('keydown', handleKeyDown)
+      return () => {
+        document.body.style.overflow = ''
+        window.removeEventListener('keydown', handleKeyDown)
+      }
+    } else {
+      document.body.style.overflow = ''
+    }
+  }, [mobileMenuOpen])
+
+  const closeMenu = () => setMobileMenuOpen(false)
+
   return (
     <div className="min-h-screen bg-canvas font-sans text-ink">
-      <header className="fixed top-0 z-50 w-full border-b border-hairline bg-white/80 dark:bg-charcoal/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+      <header className="fixed top-0 z-50 w-full border-b border-hairline bg-white/85 dark:bg-charcoal/85 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2.5">
             <img
               src="/android-chrome-192x192.png"
@@ -235,22 +264,123 @@ export function LandingView() {
             </a>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/login"
-              className="rounded-full px-4 py-2 text-sm font-medium text-ink-secondary transition-colors hover:bg-canvas-soft hover:text-ink"
+              className="hidden sm:inline-flex rounded-full px-4 py-2 text-sm font-medium text-ink-secondary transition-colors hover:bg-canvas-soft hover:text-ink"
             >
               Connexion
             </Link>
             <Link
               href="/signup"
-              className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-white shadow-level-1 transition-all duration-150 hover:bg-primary-active hover:shadow-level-2 active:scale-95"
+              className="rounded-full bg-primary px-4 sm:px-5 py-2 text-xs sm:text-sm font-medium text-white shadow-level-1 transition-all duration-150 hover:bg-primary-active hover:shadow-level-2 active:scale-95"
             >
               Créer un compte
             </Link>
+
+            {/* Mobile Hamburger Toggle */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              className="md:hidden inline-flex items-center justify-center rounded-xl p-2 text-ink-secondary hover:bg-canvas-soft transition-colors cursor-pointer"
+              aria-label="Ouvrir le menu de navigation"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
           </div>
         </div>
       </header>
+
+      {/* Mobile Drawer Navigation for Landing */}
+      {mounted &&
+        createPortal(
+          <div
+            className={`fixed inset-0 z-[999] md:hidden transition-all duration-300 ${
+              mobileMenuOpen ? 'visible opacity-100 pointer-events-auto' : 'invisible opacity-0 pointer-events-none'
+            }`}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div
+              className={`fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 ${
+                mobileMenuOpen ? 'opacity-100' : 'opacity-0'
+              }`}
+              onClick={closeMenu}
+            />
+
+            <div
+              className={`fixed inset-y-0 right-0 flex w-72 max-w-[85vw] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 ${
+                mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+              }`}
+            >
+              <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5 dark:border-slate-800">
+                <div className="flex items-center gap-2.5">
+                  <img src="/android-chrome-192x192.png" alt="" className="h-7 w-7 rounded-lg object-cover shadow-xs" />
+                  <span className="font-amatry text-xl tracking-wide text-slate-900 dark:text-white">Edulink</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeMenu}
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                  aria-label="Fermer le menu"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="flex flex-1 flex-col justify-between p-5">
+                <nav className="space-y-2">
+                  <a
+                    href="#features"
+                    onClick={closeMenu}
+                    className="flex items-center rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    Fonctionnalités
+                  </a>
+                  <a
+                    href="#profiles"
+                    onClick={closeMenu}
+                    className="flex items-center rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    Profils (Étudiants & Profs)
+                  </a>
+                  <a
+                    href="#testimonials"
+                    onClick={closeMenu}
+                    className="flex items-center rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    Avis d'utilisateurs
+                  </a>
+                  <a
+                    href="#cta"
+                    onClick={closeMenu}
+                    className="flex items-center rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    Commencer
+                  </a>
+                </nav>
+
+                <div className="space-y-3 pt-6 border-t border-slate-200 dark:border-slate-800">
+                  <Link
+                    href="/login"
+                    onClick={closeMenu}
+                    className="flex w-full items-center justify-center rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    Se connecter
+                  </Link>
+                  <Link
+                    href="/signup"
+                    onClick={closeMenu}
+                    className="flex w-full items-center justify-center rounded-xl bg-primary py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-active transition-colors"
+                  >
+                    Créer un compte
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
 
       <main>
         <section className="relative flex min-h-[640px] flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#0c8c5e] via-[#09734d] to-[#04482e] px-6 pt-28 pb-36 text-white md:min-h-[720px]">
