@@ -186,6 +186,18 @@ export async function getLevelsByFiliere(filiereId: string) {
   return data ?? []
 }
 
+export async function requestPasswordReset(email: string) {
+  const supabase = await createClient()
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    redirectTo: `${baseUrl}/reset-password`,
+  })
+  if (error) {
+    return { error: error.message }
+  }
+  return { success: true }
+}
+
 export async function logout() {
   const supabase = await createClient()
   await supabase.auth.signOut()

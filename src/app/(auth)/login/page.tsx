@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { login, requestPasswordReset } from '@/lib/actions/auth.actions'
 import { AuthCard, GlassInput } from '@/components/auth/AuthCard'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -21,7 +21,6 @@ export default function LoginPage() {
   const [inactivityAlert, setInactivityAlert] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -38,19 +37,21 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    const fd = new FormData()
+    fd.set('email', email.trim())
+    fd.set('password', password)
 
-    if (error) {
-      setError(error.message)
+    const res = await login(fd)
+    if (res?.error) {
+      if (res.error.toLowerCase().includes('invalid login credentials') || res.error.toLowerCase().includes('invalid_credentials')) {
+        setError('Adresse email ou mot de passe incorrect.')
+      } else if (res.error.toLowerCase().includes('email not confirmed')) {
+        setError('Votre adresse email n\'a pas encore été confirmée. Veuillez vérifier votre boîte mail.')
+      } else {
+        setError(res.error)
+      }
       setLoading(false)
-      return
     }
-
-    router.push('/dashboard')
-    router.refresh()
   }
 
   async function handleForgotPassword(e: React.MouseEvent) {
@@ -63,9 +64,9 @@ export default function LoginPage() {
       return
     }
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email)
-    if (error) {
-      setError(error.message)
+    const res = await requestPasswordReset(email)
+    if (res?.error) {
+      setError(res.error)
       return
     }
     setResetSent(true)
