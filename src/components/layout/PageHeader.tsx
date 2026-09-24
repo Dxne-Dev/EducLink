@@ -19,15 +19,15 @@ interface PageHeaderProps {
 
 export function PageHeader({ breadcrumb, title, subtitle, actions, className }: PageHeaderProps) {
   return (
-    <div className={cn('flex flex-wrap items-end justify-between gap-4', className)}>
-      <div className="min-w-0">
+    <div className={cn('flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4', className)}>
+      <div className="min-w-0 flex-1">
         {breadcrumb && breadcrumb.length > 0 && (
-          <nav aria-label="breadcrumb" className="mb-1.5">
+          <nav aria-label="breadcrumb" className="mb-1.5 overflow-x-auto">
             <ol className="flex flex-wrap items-center gap-1 text-caption text-ink-faint">
               {breadcrumb.map((crumb, index) => {
                 const isLast = index === breadcrumb.length - 1
                 return (
-                  <li key={crumb.label + '-' + index} className="flex items-center gap-1">
+                  <li key={crumb.label + '-' + index} className="flex items-center gap-1 whitespace-nowrap">
                     {crumb.href && !isLast ? (
                       <Link href={crumb.href} className="transition-colors hover:text-ink">
                         {crumb.label}
@@ -42,10 +42,10 @@ export function PageHeader({ breadcrumb, title, subtitle, actions, className }: 
             </ol>
           </nav>
         )}
-        <h1 className="text-heading-2 text-ink">{title}</h1>
-        {subtitle && <p className="mt-1 text-body-sm text-ink-muted">{subtitle}</p>}
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-ink dark:text-white leading-snug">{title}</h1>
+        {subtitle && <p className="mt-1 text-xs sm:text-sm text-ink-muted dark:text-slate-400 leading-relaxed">{subtitle}</p>}
       </div>
-      {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+      {actions && <div className="flex flex-wrap shrink-0 items-center gap-2">{actions}</div>}
     </div>
   )
 }

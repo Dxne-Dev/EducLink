@@ -132,7 +132,7 @@ export function ListPageShell<T>({
 
         {hasForm && (
           <div>
-            <Card className="rounded-3xl border border-hairline bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 sticky top-6">
+            <Card className="rounded-3xl border border-hairline bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 lg:sticky lg:top-6">
               <CardHeader className="pb-4">
                 <CardTitle className="text-title text-ink dark:text-slate-100">
                   {formTitle}

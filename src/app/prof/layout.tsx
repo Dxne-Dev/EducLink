@@ -35,7 +35,7 @@ export default async function ProfLayout({
       <Sidebar role="teacher" />
       <div className="flex min-w-0 flex-1 flex-col" suppressHydrationWarning>
         <Header fullName={profile?.full_name} role="teacher" />
-        <main className="flex-1 p-6" suppressHydrationWarning>{children}</main>
+        <main className="flex-1 px-3.5 py-4 sm:p-6 lg:p-8 w-full max-w-7xl mx-auto min-w-0" suppressHydrationWarning>{children}</main>
       </div>
     </div>
   )

@@ -39,7 +39,7 @@ function Modal({ open, onClose, children, className }: ModalProps) {
       <div className="fixed inset-0 bg-black/50 backdrop-blur-xs" />
       <div
         className={cn(
-          'relative z-50 w-full max-w-lg rounded-2xl border border-hairline bg-white dark:bg-slate-900 dark:border-slate-800 p-6 shadow-2xl transition-colors',
+          'relative z-50 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl border border-hairline bg-white dark:bg-slate-900 dark:border-slate-800 p-4 sm:p-6 shadow-2xl transition-colors',
           className
         )}
       >

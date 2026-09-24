@@ -77,7 +77,7 @@ export function MobileNav({ role }: MobileNavProps) {
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
           <div className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity" onClick={close} />
           
-          <div className="fixed inset-y-0 left-0 flex w-72 max-w-full flex-col bg-white shadow-2xl dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 animate-slide-up">
+          <div className="fixed inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-white shadow-2xl dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 animate-slide-up">
             {/* Mobile Header */}
             <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4 dark:border-slate-800">
               <Link href={homeHref} onClick={close} className="flex items-center gap-2.5">
