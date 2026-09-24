@@ -17,6 +17,7 @@ const badgeVariants = cva(
         teal: 'bg-accent-teal/15 text-accent-teal px-2 py-0.5 dark:bg-teal-950/40 dark:text-teal-300',
         pink: 'bg-accent-pink/15 text-accent-pink px-2 py-0.5 dark:bg-pink-950/40 dark:text-pink-300',
         secondary: 'bg-canvas-soft text-ink-muted px-2 py-0.5 dark:bg-slate-800 dark:text-slate-300',
+        outline: 'border border-slate-200 bg-transparent text-slate-700 px-2 py-0.5 dark:border-slate-700 dark:text-slate-300',
       },
     },
     defaultVariants: {

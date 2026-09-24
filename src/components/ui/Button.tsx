@@ -1,39 +1,40 @@
-import { forwardRef } from 'react'
+import * as React from 'react'
+import { Slot } from '@radix-ui/react-slot'
 import { Loader2 } from 'lucide-react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0',
   {
     variants: {
       variant: {
-        // Pill CTA bleu — le seul bouton coloré de la page
-        primary:
-          'bg-primary text-white rounded hover:active:scale-[0.97] shadow-level-1',
-        // Pill blanc avec ombre — CTA secondaire
+        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        destructive:
+          'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+        danger:
+          'bg-danger text-white hover:bg-danger/90 shadow-level-1',
+        outline:
+          'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
         secondary:
-          'bg-white text-ink rounded border border-hairline shadow-level-1 hover:shadow-level-2 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-700',
-        // Bouton utilitaire — radius serré 4px, bordure hairline
+          'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         utility:
           'bg-white text-ink rounded border border-hairline text-body-sm dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-700',
-        // Lien texte bleu
-        link: 'text-primary underline-offset-4 hover:underline p-0 h-auto',
-        // Ghost — transparent
-        ghost: 'text-ink-secondary hover:bg-canvas-soft rounded',
-        // Danger
-        danger: 'bg-danger text-white rounded shadow-level-1',
+        ghost: 'hover:bg-accent hover:text-accent-foreground',
+        link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
-        sm: 'h-8 px-3 text-body-sm',
-        md: 'h-10 px-5 text-body-md',
-        lg: 'h-12 px-8 text-body-md',
+        default: 'h-10 px-4 py-2',
+        sm: 'h-9 rounded-md px-3',
+        md: 'h-10 rounded-md px-4 py-2',
+        lg: 'h-11 rounded-md px-8',
         icon: 'h-10 w-10',
       },
     },
     defaultVariants: {
-      variant: 'primary',
-      size: 'md',
+      variant: 'default',
+      size: 'default',
     },
   }
 )
@@ -41,26 +42,41 @@ const buttonVariants = cva(
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
+  asChild?: boolean
   loading?: boolean
   icon?: React.ReactNode
 }
 
-const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, loading, icon, children, disabled, ...props }, ref) => {
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      className,
+      variant,
+      size,
+      asChild = false,
+      loading = false,
+      icon,
+      children,
+      disabled,
+      ...props
+    },
+    ref
+  ) => {
+    const Comp = asChild ? Slot : 'button'
     return (
-      <button
+      <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         disabled={disabled || loading}
         {...props}
       >
         {loading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <Loader2 className="h-4 w-4 animate-spin mr-2" />
         ) : icon ? (
-          <span className="[&>svg]:h-4 [&>svg]:w-4">{icon}</span>
+          <span className="mr-2 [&>svg]:h-4 [&>svg]:w-4">{icon}</span>
         ) : null}
         {children}
-      </button>
+      </Comp>
     )
   }
 )

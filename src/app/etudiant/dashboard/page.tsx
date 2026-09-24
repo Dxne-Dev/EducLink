@@ -196,11 +196,11 @@ export default async function StudentDashboardPage() {
 
           <div className="flex shrink-0 items-center gap-3">
             <Link
-              href="/etudiant/recherche"
+              href="/etudiant/ressources"
               className="inline-flex h-11 items-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-slate-900 shadow-md transition-all hover:bg-slate-100 hover:scale-105 active:scale-95"
             >
-              <Search className="h-4 w-4 text-primary" />
-              <span>Rechercher un cours</span>
+              <BookOpen className="h-4 w-4 text-primary" />
+              <span>Accéder à mes cours</span>
             </Link>
           </div>
         </div>

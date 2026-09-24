@@ -13,6 +13,7 @@ import {
   X,
   Filter,
   Library,
+  Search as SearchIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 import type { ResourceType } from '@/types/database'
@@ -24,7 +25,13 @@ import { PageHeader } from '@/components/layout/PageHeader'
 export const metadata = { title: 'Edulink - Mes Ressources' }
 
 interface StudentRessourcesPageProps {
-  searchParams?: Promise<{ uploader?: string; prof?: string; matiere?: string }>
+  searchParams?: Promise<{
+    uploader?: string
+    prof?: string
+    matiere?: string
+    search?: string
+    resourceId?: string
+  }>
 }
 
 const TYPE_STICKER: Record<string, string> = {
@@ -35,14 +42,20 @@ const TYPE_STICKER: Record<string, string> = {
   td: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 export default async function StudentRessourcesPage({ searchParams }: StudentRessourcesPageProps) {
   const params = await searchParams
   const profNameParam = params?.prof
   const uploaderParam = params?.uploader
   const matiereParam = params?.matiere
+  const searchParam = params?.search
+  const resourceIdParam = params?.resourceId
 
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) return null
 
@@ -61,7 +74,10 @@ export default async function StudentRessourcesPage({ searchParams }: StudentRes
     .maybeSingle()
 
   const rawFiliere = profile?.filieres as unknown
-  const filiereInfo = (Array.isArray(rawFiliere) ? rawFiliere[0] : rawFiliere) as { name: string; code: string } | null
+  const filiereInfo = (Array.isArray(rawFiliere) ? rawFiliere[0] : rawFiliere) as {
+    name: string
+    code: string
+  } | null
   const studentFiliereId = profile?.filiere_id
 
   // Niveau dynamique lié à la promotion ou direct
@@ -102,23 +118,71 @@ export default async function StudentRessourcesPage({ searchParams }: StudentRes
   let activeMatiereName: string | null = null
 
   if (matiereParam) {
-    const { data: matData } = await supabase
-      .from('matieres')
-      .select('id, name, code')
-      .or(`code.ilike.${matiereParam},id.eq.${matiereParam}`)
-      .maybeSingle()
-
-    if (matData) {
-      targetMatiereId = matData.id
-      activeMatiereName = `${matData.name}${matData.code ? ` (${matData.code})` : ''}`
+    const isUUID = UUID_REGEX.test(matiereParam)
+    if (isUUID) {
+      const { data: matData } = await supabase
+        .from('matieres')
+        .select('id, name, code')
+        .eq('id', matiereParam)
+        .maybeSingle()
+      if (matData) {
+        targetMatiereId = matData.id
+        activeMatiereName = `${matData.name}${matData.code ? ` (${matData.code})` : ''}`
+      } else {
+        targetMatiereId = matiereParam
+      }
     } else {
-      targetMatiereId = matiereParam
+      const { data: matData } = await supabase
+        .from('matieres')
+        .select('id, name, code')
+        .or(`name.ilike.%${matiereParam}%,code.ilike.%${matiereParam}%`)
+        .limit(1)
+        .maybeSingle()
+
+      if (matData) {
+        targetMatiereId = matData.id
+        activeMatiereName = `${matData.name}${matData.code ? ` (${matData.code})` : ''}`
+      } else {
+        activeMatiereName = matiereParam
+      }
     }
   }
 
-  let resources: any[] = []
+  const resMap = new Map<string, any>()
 
-  if (studentFiliereId && studentNiveauId) {
+  // 2. Si un resourceId spécifique est demandé (ex: suite à un clic dans la recherche Spotlight)
+  if (resourceIdParam && UUID_REGEX.test(resourceIdParam)) {
+    const { data: singleResource } = await supabase
+      .from('resources')
+      .select(`
+        id,
+        title,
+        description,
+        type,
+        file_path,
+        file_size,
+        mime_type,
+        version,
+        created_at,
+        uploaded_by,
+        matiere_id,
+        matieres (
+          id,
+          name,
+          niveau_id
+        ),
+        profiles!resources_uploaded_by_fkey (id, full_name, avatar_url)
+      `)
+      .eq('id', resourceIdParam)
+      .maybeSingle()
+
+    if (singleResource) {
+      resMap.set(singleResource.id, singleResource)
+    }
+  }
+
+  // 3. Récupération des ressources standards du niveau de l'étudiant
+  if (studentNiveauId) {
     let queryNiveau = supabase
       .from('resources')
       .select(`
@@ -150,8 +214,16 @@ export default async function StudentRessourcesPage({ searchParams }: StudentRes
     if (targetMatiereId) {
       queryNiveau = queryNiveau.eq('matiere_id', targetMatiereId)
     }
+    if (searchParam) {
+      queryNiveau = queryNiveau.ilike('title', `%${searchParam}%`)
+    }
 
-    let sharedResourceIds: string[] = []
+    const { data: fetchedNiveauResources } = await queryNiveau
+    for (const r of fetchedNiveauResources ?? []) {
+      resMap.set(r.id, r)
+    }
+
+    // Ressources partagées explicitement avec la promotion
     if (profile?.promo_id) {
       const { data: sharedAccess } = await supabase
         .from('resource_promo_access')
@@ -159,82 +231,139 @@ export default async function StudentRessourcesPage({ searchParams }: StudentRes
         .eq('promo_id', profile.promo_id)
         .eq('visibility', 'public')
 
-      sharedResourceIds = (sharedAccess ?? []).map((s) => s.resource_id)
-    }
-
-    let sharedResources: any[] = []
-    if (sharedResourceIds.length > 0) {
-      let queryShared = supabase
-        .from('resources')
-        .select(`
-          id,
-          title,
-          description,
-          type,
-          file_path,
-          file_size,
-          mime_type,
-          version,
-          created_at,
-          uploaded_by,
-          matiere_id,
-          matieres (
+      const sharedResourceIds = (sharedAccess ?? []).map((s) => s.resource_id)
+      if (sharedResourceIds.length > 0) {
+        let queryShared = supabase
+          .from('resources')
+          .select(`
             id,
-            name,
-            niveau_id
-          ),
-          profiles!resources_uploaded_by_fkey (id, full_name, avatar_url)
-        `)
-        .in('id', sharedResourceIds)
+            title,
+            description,
+            type,
+            file_path,
+            file_size,
+            mime_type,
+            version,
+            created_at,
+            uploaded_by,
+            matiere_id,
+            matieres (
+              id,
+              name,
+              niveau_id
+            ),
+            profiles!resources_uploaded_by_fkey (id, full_name, avatar_url)
+          `)
+          .in('id', sharedResourceIds)
 
-      if (targetUploaderId) {
-        queryShared = queryShared.eq('uploaded_by', targetUploaderId)
-      }
-      if (targetMatiereId) {
-        queryShared = queryShared.eq('matiere_id', targetMatiereId)
-      }
+        if (targetUploaderId) {
+          queryShared = queryShared.eq('uploaded_by', targetUploaderId)
+        }
+        if (targetMatiereId) {
+          queryShared = queryShared.eq('matiere_id', targetMatiereId)
+        }
+        if (searchParam) {
+          queryShared = queryShared.ilike('title', `%${searchParam}%`)
+        }
 
-      const { data: sharedData } = await queryShared
-      sharedResources = sharedData ?? []
+        const { data: sharedData } = await queryShared
+        for (const r of sharedData ?? []) {
+          if (!resMap.has(r.id)) {
+            resMap.set(r.id, r)
+          }
+        }
+      }
+    }
+  }
+
+  // 4. Fallback intelligent : si aucun résultat n'est trouvé pour ce niveau précis mais qu'un filtre (matière, recherche, etc.) est actif
+  if (resMap.size === 0 && (targetMatiereId || matiereParam || searchParam || targetUploaderId)) {
+    let queryFallback = supabase
+      .from('resources')
+      .select(`
+        id,
+        title,
+        description,
+        type,
+        file_path,
+        file_size,
+        mime_type,
+        version,
+        created_at,
+        uploaded_by,
+        matiere_id,
+        matieres (
+          id,
+          name,
+          niveau_id
+        ),
+        profiles!resources_uploaded_by_fkey (id, full_name, avatar_url)
+      `)
+      .eq('visibility', 'public')
+      .order('created_at', { ascending: false })
+
+    if (targetMatiereId) {
+      queryFallback = queryFallback.eq('matiere_id', targetMatiereId)
+    } else if (matiereParam) {
+      // Filtrer par nom de matière via la relation
+      const { data: matchedMatieres } = await supabase
+        .from('matieres')
+        .select('id')
+        .ilike('name', `%${matiereParam}%`)
+      const matIds = (matchedMatieres ?? []).map((m) => m.id)
+      if (matIds.length > 0) {
+        queryFallback = queryFallback.in('matiere_id', matIds)
+      }
     }
 
-    const { data: fetchedNiveauResources } = await queryNiveau
+    if (targetUploaderId) {
+      queryFallback = queryFallback.eq('uploaded_by', targetUploaderId)
+    }
 
-    const resMap = new Map<string, any>()
-    for (const r of fetchedNiveauResources ?? []) {
+    if (searchParam) {
+      queryFallback = queryFallback.ilike('title', `%${searchParam}%`)
+    }
+
+    const { data: fallbackData } = await queryFallback
+    for (const r of fallbackData ?? []) {
       resMap.set(r.id, r)
     }
-    for (const r of sharedResources) {
-      if (!resMap.has(r.id)) {
-        resMap.set(r.id, r)
-      }
-    }
-    const fetchedResources = Array.from(resMap.values())
+  }
 
-    if (fetchedResources && fetchedResources.length > 0) {
-      const resourcesWithUrls = await Promise.all(
-        fetchedResources.map(async (r) => {
-          let signedUrl: string | null = null
-          if (r.file_path) {
-            const { data: signedData } = await supabase.storage
-              .from('resources')
-              .createSignedUrl(r.file_path, 3600)
-            signedUrl = signedData?.signedUrl || null
-          }
-          return {
-            ...r,
-            signedUrl,
-          }
-        })
-      )
-      resources = resourcesWithUrls
-    }
+  const fetchedResources = Array.from(resMap.values())
+  let resources: any[] = []
+
+  if (fetchedResources.length > 0) {
+    resources = await Promise.all(
+      fetchedResources.map(async (r) => {
+        let signedUrl: string | null = null
+        let downloadUrl: string | null = null
+        if (r.file_path) {
+          const extension = r.file_path.split('.').pop() || 'pdf'
+          const safeTitle = (r.title || 'document').replace(/[/\\?%*:|"<>]/g, '-')
+          const fileName = `${safeTitle}.${extension}`
+          const [signedRes, downloadRes] = await Promise.all([
+            supabase.storage.from('resources').createSignedUrl(r.file_path, 3600),
+            supabase.storage.from('resources').createSignedUrl(r.file_path, 3600, { download: fileName }),
+          ])
+          signedUrl = signedRes.data?.signedUrl || null
+          downloadUrl = downloadRes.data?.signedUrl || signedUrl
+        }
+        return {
+          ...r,
+          signedUrl,
+          downloadUrl,
+        }
+      })
+    )
   }
 
   const breadcrumb = [
     { label: 'Espace Étudiant', href: '/etudiant/dashboard' },
     { label: 'Mes Ressources' },
   ]
+
+  const hasActiveFilters = Boolean(targetUploaderId || matiereParam || searchParam || resourceIdParam)
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 pb-12">
@@ -246,31 +375,40 @@ export default async function StudentRessourcesPage({ searchParams }: StudentRes
         subtitle={
           filiereInfo && niveauName
             ? `Supports de cours, TD, examens et fiches pour ${filiereInfo.name} (${niveauName}).`
-            : 'Accédez aux ressources déposées par vos professeurs.'
+            : 'Accédez à l\'ensemble des supports pédagogiques déposés par vos professeurs.'
         }
       />
 
       {/* Barre de filtres actifs */}
-      {(targetUploaderId || matiereParam) && (
-        <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 dark:bg-primary/10 px-4 py-3 text-body-sm shadow-xs">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-primary" />
-            <span className="text-ink dark:text-slate-100">
-              {targetUploaderId && (
-                <>
-                  Ressources du professeur : <strong>{activeTeacherName}</strong>
-                </>
-              )}
-              {matiereParam && activeMatiereName && (
-                <>
-                  {targetUploaderId ? ' · ' : ''}Matière : <strong>{activeMatiereName}</strong>
-                </>
-              )}
-            </span>
+      {hasActiveFilters && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary/5 dark:bg-primary/10 px-4 py-3 text-body-sm shadow-xs">
+          <div className="flex flex-wrap items-center gap-2">
+            <Filter className="h-4 w-4 text-primary shrink-0" />
+            <span className="text-ink dark:text-slate-100 font-medium">Filtres actifs :</span>
+            {targetUploaderId && (
+              <Badge variant="outline" className="bg-white dark:bg-slate-800">
+                Professeur : {activeTeacherName}
+              </Badge>
+            )}
+            {matiereParam && (
+              <Badge variant="outline" className="bg-white dark:bg-slate-800">
+                Matière : {activeMatiereName || matiereParam}
+              </Badge>
+            )}
+            {searchParam && (
+              <Badge variant="outline" className="bg-white dark:bg-slate-800">
+                Recherche : « {searchParam} »
+              </Badge>
+            )}
+            {resourceIdParam && (
+              <Badge variant="outline" className="bg-white dark:bg-slate-800">
+                Document ciblé
+              </Badge>
+            )}
           </div>
           <Link
             href="/etudiant/ressources"
-            className="flex items-center gap-1.5 text-caption font-semibold text-primary dark:text-sky-400 hover:underline"
+            className="flex items-center gap-1.5 text-caption font-semibold text-primary dark:text-sky-400 hover:underline shrink-0"
           >
             <X className="h-3.5 w-3.5" />
             Effacer les filtres
@@ -279,25 +417,19 @@ export default async function StudentRessourcesPage({ searchParams }: StudentRes
       )}
 
       {/* Liste des ressources */}
-      {!studentFiliereId || !studentNiveauId ? (
-        <Card className="rounded-3xl border border-hairline bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-          <CardContent className="py-12">
-            <EmptyState
-              icon={<GraduationCap className="h-8 w-8 text-ink-faint" />}
-              title="Cursus non renseigné"
-              description="Veuillez compléter votre filière et niveau dans votre profil pour accéder aux ressources."
-            />
-          </CardContent>
-        </Card>
-      ) : resources.length === 0 ? (
+      {resources.length === 0 ? (
         <Card className="rounded-3xl border border-hairline bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
           <CardContent className="py-12">
             <EmptyState
               icon={<Library className="h-8 w-8 text-ink-faint" />}
-              title={targetUploaderId ? 'Aucun document publié par cet enseignant' : 'Aucune ressource disponible'}
+              title={
+                hasActiveFilters
+                  ? 'Aucun document ne correspond aux filtres'
+                  : 'Aucune ressource disponible'
+              }
               description={
-                targetUploaderId
-                  ? "Cet enseignant n'a pas encore mis en ligne de support public pour votre promotion."
+                hasActiveFilters
+                  ? 'Essayez d\'effacer les filtres ou de rechercher un autre mot-clé dans la barre ⌘K.'
                   : "Aucune ressource publique n'a encore été publiée pour votre niveau cette année."
               }
             />
@@ -372,10 +504,9 @@ export default async function StudentRessourcesPage({ searchParams }: StudentRes
                         Consulter
                       </a>
                       <a
-                        href={resource.signedUrl}
-                        download={resource.title}
+                        href={resource.downloadUrl || resource.signedUrl}
                         className="inline-flex items-center justify-center rounded-xl border border-hairline dark:border-slate-700 p-2 text-ink-muted hover:text-ink hover:bg-canvas-soft dark:hover:bg-slate-800 transition-colors"
-                        title="Télécharger"
+                        title="Télécharger sur votre appareil"
                       >
                         <Download className="h-3.5 w-3.5" />
                       </a>

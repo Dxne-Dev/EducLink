@@ -8,6 +8,7 @@ import { logout } from '@/lib/actions/auth.actions'
 import { LogOut, User, Sparkles, Shield, GraduationCap, BookOpen, Loader2 } from 'lucide-react'
 import { MobileNav } from './MobileNav'
 import { ThemeToggle } from './ThemeToggle'
+import { SearchModal } from '@/components/search/SearchModal'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -82,6 +83,11 @@ export function Header({ fullName, role }: HeaderProps) {
             {roleLabel}
           </span>
         </div>
+      </div>
+
+      {/* Center / Search Modal Trigger */}
+      <div className="flex flex-1 items-center justify-center px-2 sm:px-6">
+        <SearchModal userRole={role} />
       </div>
 
       {/* Right side: Actions, Theme switcher & User Menu */}
